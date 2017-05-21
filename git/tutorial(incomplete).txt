@@ -1,0 +1,100 @@
+git init (Git允许成群的人在同一时刻工作在同一个文档上(通常是写代码),并且相互之间没有任何影响.Git是一个分布式版本控制系统(DVCS).下面我们的终端提示符当前正处于一个目录中，这个目录我们决定命名为"octobox".为了在该目录下初始化一个Git仓库,键入下面的命令: git init)
+|
+git status(干的漂亮!正如Git告诉我们的,我们的"octobox"目录现在在/.git/中有一个空的仓库.这个仓库是一个隐藏的目录,在这个隐藏的目录中Git对这个隐藏的目录进行操作.当你通过了这个教程时,为了保存你的进步--当你成功的完成该教程时获得一个徽章--翻到前面去创建一个免费的Code School账户.我会一直在这等着你.接下来,让我们键入git status命令来看一下我们的项目当前状态是什么:git status)
+|
+git status(我在octobox库中为你创建了一个名为octocat.txt的文件(正如你在浏览器下方看到的).你应该再次运行git status命令来看一下仓库的状态已经发生了什么样的改变:git status)
+|
+git add octocat.txt(好,现在看起来我们的Git仓库正在很好的工作.注意Git怎么说octocat.txt是"未追踪的"?那意味着Git将文件octocat.txt理解为一个新文件.为了告诉Git追踪对文件octocat.txt做的改变,我们首先要用git add命令将文件octocat.txt添加到暂存区(staging area):git add octocat.txt)
+|
+git status(干的漂亮!Git现在会追踪我们的octocat.txt文件了.再次运行git status命令来看一下where we stand(我们站在哪?我们位于哪?or else))
+|
+git commit -m "Add cute octocat story"(注意,Git怎么说changes to be committed?列在这里的文件现在还没有在我们的仓库中而是位于暂存区(staging area),在将文件<真正>存到仓库之前,我们可以从暂存区添加或是移除文件.为了保存我们的暂存区文件的改变,我们运行commit命令并且带有一个参数,该参数描述我们对夜都做了什么改变.让我们通过键入下面的命令:git commit -m "Add cute octocat story")
+|
+git add '*.txt'(漂亮!如果你想要添加许多同类型的文件,你也可以使用通配符.注意我已经添加了一个含有.txt文件的分支到你的目录了.我放了一些在名为"octofamily"的文件夹下还有一些直接放到了"octobox"目录的根下.幸运地,我们可以使用git add命令配合通配符添加所有的新文件.不要忘记要加引号:git add '*.txt')
+|
+git commit -m 'Add all the octocat txt files'(好,你已经将所有的txt文件都添加到暂存区(staging area)了.觉得无聊的话(feel free:轻松,随便)可以运行git status来看一下你将要提交什么.如果看起来很好,继续运行命令:git commit -m 'Add all the octocat txt files')
+|
+git log(我们已经做了几个提交了.现在让我们浏览它们看一下我们都做了什么改变.对我们来说是幸运地,有一个git log.把Git的日志看作是一个到目前为止我们所提交的所有改变的一个日记,我们按顺序提交它们.现在尝试着运行下面的命令:git log)
+|
+git remote add origin https://github.com/try-git/try_git.git(干的好!我们已经使用Try Git为你创建了一个新的空的GitHub仓库,地址是https://github.com/try-git/try_git.git.为了将我们本地的repo推送到GitHub服务器,我们需要添加一个远程的仓库(在本例中就是上一免掉的那个https://*.git).这个命令带了<一个远程名字>和<一个仓库URL>,在该例这个URL就是https://*.git.运行下面带有选项的git remote add命令:git remote add origin https://github.com/try-git/try_git.git)
+|
+git push -u origin master
+|
+git pull origin master
+|
+git diff HEAD
+|
+git add octofamily/octodog.txt
+|
+git diff --staged
+|
+git reset octofamily/octodog.txt
+|
+git checkout -- octocat.txt
+|
+git branch clean_up
+|
+git checkout clean_up
+|
+git rm '*.txt'
+|
+git commit -m "Remove all the cats"
+|
+git checkout master
+|
+git merge clean_up
+|
+git branch -d clean_up
+|
+git push
+===============================================================================
+1.想要在哪里(准确来讲是在哪个文件夹里)创建仓库,则将终端的路径切换到那个目录，然后输入"git init"，命令执行后会在该文件夹下又生成一个隐藏的文件夹，名为".git"，此时一个git库就创建完成了。目前的理解为将所有要做版本控制的文件都放在终端所在目录里，而".git"目录中存放的是你对文件操作的记录信息，后期执行命令的时候好多信息其实都是从.git目录中的相关文件中提取的
+---------------------------------------------
+2.git只能跟踪仓库(那个目录)中创建的文本文件,其它位置创建的文件git是跟踪不了的。
+通过"git status"的输出信息可以看出仓库中有没有新建文件，文件有没有被修改等，基本上可以说只要那个文件夹中有任何变化都可以通过"git status"来获取；我猜测是只要那个文件夹里有任何变化，git服务程序就会捕获，并且计入到该目录下的".git"目录中，然后当你输入"git status"时，就会有指定的逻辑从".git"文件夹中将需要的信息给提取并输入到stdout
+2.1 "git status"的出信息中如果说某个文件是"untracked"则意味着这是一个新创建的文件
+--------------------------------------------------------
+3.为了告诉git让他追踪某个文件的变化使用"git add"命令，执行该命令后会将要追踪的文件添加到所谓的暂存区(staging area集结地)
+---------------------------------------
+4.将文件添加到staging area前后，你用git status输出的结果是不一样的，自己可以看一下; 另外我们前面经历了用touch创建一个文件,用git add将文件添加到staging area中，即使是这样，这个文件还是没有被放进我们的repository中。当文件的改变被git add到staing area中,但是还没有被提交到库里时，我们可以对staging area中的内容进行add或是remove，这个后面讲。
+现在我要将staing area中的内容提交到我们的repository中，并且提交的时候为了方便后面回顾知道此处的提交的是什么，在提交的时候可以顺便加一句对本次提交的说明:"git commit -m '这里是要提交的说明'"。
+此时应思考一下, 我们在A目录下执行了git init后，只是说明了该目录中的文件可以被追踪了，但是就目前来看,A目录并不是所谓的repository，隐藏的目录.git才是repository,A目录只是说明了，在A目录下的文件可以被追踪，当被追踪的文件被git add,然后git commit后才会将修改的内容添加到repository(.git)中。 当我 们提交完，再执行"git status"看输出信息，显示两行，一行是"nothing to commit"，一行是"working directory clean",一个说没有要提交的，一个说工作目录是干净的，从这两句输出目前我们应该可以得出四个空间，一个空间是执行git init时所在的目录，一个是working directory，一个是staing area,还有一个是.git(repository),之前看别人写的教程，认为git init所在的目录就是working directory，但是目前看那么说是不对的，因为此时git init所在的目录有文件，但是git commit后却说working directory是空的(但就目前看，它说working directory clean可能是与当前版本库中的内容相比没有什么改变故说是clean，先记下吧具体啥情况再说)。
+-------------------------------
+5."git add"命令可以使用通配符(wildcard),比如可被跟踪的目录里面有好多的".txt"文件都要被添加到staging area,此时有两种形式，如果输入"git add *.txt"则只有当前目录下的txt文件被添加到staging area，此时如果当前目录下还有一个子目录，则子目录中的txt文件不会被添加到staging area;另一种形式是"git add '*.txt'"此时无论是当前目录下的txt文件，还是当前目录子目录下的txt文件都会被添加到staging area中。总结一下，有通配符的情况下，文件名被引号引起来，影响的是以当前目录为根目录的所有层级的相应文件，文件名没有被引起来，则只对当前目录下的相应文件起作用，注意这里的当前目录不只是指git init时的目录，也可能是它的子目录，孙目录
+目前看到，git commit后的输出信息, "1 file changed, 1 insertion(+)",可以看出来具体是几个文件被改变了，并且是如何改变的，是增行了还是删行了。需要注意的是不仅仅是修改已存文件内容时git commit后会有"N file changed",新建文件后，执行"git commit"也会有"N file changed",因为新建文件也是changed,这个就要自己理解一下了
+------------------------------------------
+6.我们还可以通过"git log"命令来查看我们的commit历史，输出的内容是按照commit的日期倒序排列(最后提交的在最前面)
+----------------------------------
+7.从这向下又和上面不同的，涉及远程库的问题了
+有时因为安全原因，我们需要将本地的repository在云端也做个备份，这时，云端需要做的是建一个空库，本地需要做的是先执行"git remote add 云端库的别名 云端库地址"这样一个命令，然后再执行"git push -u 别名 分支名",如果用的是https的协议再输入相应的用户名和密码即可将相应分支的数据同步到云端库中。需要注意的是如果想再次同步库内容到云端时，如果云端的内容在你上传之前有改动，则你直接git push是会出错的，要先执行"git pull http://xxx.git"到本地和本地的代码合并，然后再执行"git push"才可以提交成功，我这里用的是"git push",因为之前第一次用的是"git push -u origin master"这个命令因为-u参数下次执行"git push"就相当于执行了"git push origin master".
+而且通过试验，只有当云端库是空的时候在任意电脑执行"git push"才能成功，否则必须要先有"git pull"然后执行"git push"才能成功
+再总结一下：将本地库和云端第一次绑定: "git remote add 别名 https://xxx.git",然后 "git push -u 别名 分支名",输入用户名密码同步成功，上两条命令可以改为一条"git push https://xxx.git 分支名";上面这句说的是第一次和云端库同步，如果以后想再将新内容同步到云端库，先执行"git push [http://XXX.git]",如果成功则OK，不成功的话看提示，应该是云端的文件比你本地的新，你要先"git pull [http://xxx..git]"，将别人上传的那部分也拽到你本地，然后整个一起再"git push [https://xxx.git]",这要做能保证你上传代码成功的那一时刻，你本地的代码和云端的代码是一致的。
+-------------------------------------------
+8.之前也说过，git到目前为止大概有四个空间，第一个是"git init"时的目录(只有该目录里面的文件可以被追踪)，第二个是working directory(这个从git commit后再输入git status可以找到),第三个是staging area,第四个是".git"目录(真正的repository)。而且这四个是依次的关系。目前感觉，当我们要编辑一个文件的时候，该文件先被加载到working directory,而不是直接在文件上编辑，然后git add到staging area, 最后git commit到.git里，而且到.git里之后才会将working directory中对文件做的更改保存到相应的文件中，写到这我感觉我这么写是不对的，因为之前看文章说过什么HEAD指针之类的，这个究竟是怎么一回事，以后看到权威点的东西再改正。
+接着说。当我们git commit之后，如果又对"git init"目录下的文件进行修改了，但是还没"git add" 或是"git commit"之类的操作时，可以用"git diff HEAD"命令来查看最近一次"git commmit"的数据和当前"git init"文件树中的文件内容有何不同。
+------------------------------
+9.看staging area区域有什么变化，可以通过"git add 文件名"和"git diff --staged"这两个命令配合，第一个命令负责修改staging area中内容的变化，第二个命令负责将这些变化转化为可读的标准输出
+------------------------
+10.如果我们新建了一个文件A，并且已经"git add A"了，但是我们又不想把该文件放库里，即提交的时候staging area里没有A文件，则可以执行"git reset A",虽然这里用了reset，但是后面加了特定的文件A，所以如果"staging area"中有好多的文件，则执行完"git reset A"后，只有A被移出了"staging area"不会影响其它文件
+---------------------------------
+11.如果之前有一个文件A里面有一行内容abc,然后我们对A文件进行"git add"和"git commit"，此时A文件已经被存到repository中了,接下来无论你对A文件做什么怎么编辑，弄的怎么乱，都可以通过"git checkout -- A "命令来将A文件中的内容恢复为它最近一次提交时的内容。这里你对A编辑后，无论你是"git add"还是没"git add"都无所谓。感觉每次提交git都给当前的文件做了一个备份放到某个地方，不知道对不对，
+-------------------------------
+12.从现在开始又是另外一个阶段了，讲关于分支的(branch).
+master是主线，它相当于一个根(/),无论有多少层分支，master是最顶端的那个。新建分支命令"git branch 分支名"，切换分支A为当前分支"git checkout A"
+新建创建的分支应该是当前父分支的备份（我是觉得分支的内容应该是父分支的备份而非master的备份，以待求证）
+----------------------------
+13.使用"git rm 文件名"删除文件，不仅会将匹配到的文件从磁盘上删除而且会将该删除动作提交到staging area区(说白了有两个效果，一是ls后匹配的文件看不到了;二是git status,可以看到相关的dleleted行)，需要注意的是，如果想让repository也记录这个删除行为，还要执行"git commit"来将staging area中的命令执行了
+------------
+14.比较重要的一步，先将分支切换回主分支,然后将分支的内容合并到master,执行"git merge 分支名",但是我在debian下测试结果和git官网interactive terminal中的结果有些不同，debian下是在clean_up分支下执行完"git rm '*.txt'"后"git init"树中的扩展名为txt的文件就被删了，而官网的交互终端中，是在执行"git merge clean_up"时才将相应文件删除的，不知是版本原因还是啥，但还是觉得官方上做的比较符合逻辑
+-----------------------
+15.合并完之后分支就没用了，一般分支是父分支的copy(我是这样觉得的)，可能是在改bug或是新功能中才会创建分支，但分支合并到父分支后，该分支就没用了，可以用"git branch -d 分支名"命令删掉该分支
+----------------------------
+16.最后将master推送到远端仓库
+
+
+
+
+
+
+
+

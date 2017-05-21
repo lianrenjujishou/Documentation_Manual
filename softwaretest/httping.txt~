@@ -1,0 +1,98 @@
+File: *manpages*, Node: httping, Up: (dir)
+
+HTTPING(1)    General Commands Manual         HTTPING(1)
+
+NAME
+httping - 测试web服务器的延迟和吞吐率
+
+SYNOPSIS
+httping [options]
+
+options: [-g url] [-h hostname] [-p portnumber] [-x proxyhost:port] [-c count]
+[-i interval] [-t timeout] [-s] [-G] [-b] [-L xferlimit] [-X] [-l] [-z] [-f]
+[-m] [-o rc,...] [-e string] [-I useragent string] [-R referer string] [-r]
+[-n warn,crit] [-N mode] [-q] [-V]
+
+DESCRIPTION
+httping程序让你测试web服务器的延迟.自从1.0.6版本后也能够测试web服务器的吞吐率了  
+OPTIONS
+-g url 该选项指定想要探查的url.例如: http://localhost/
+
+-h hostname 替代'-g',也可以用-h选项来设置一个主机名: -h localhost
+
+-p portnumber -p可以和-h一起用.-p指定探查的端口号
+
+-x proxyhost:port] 使用代理服务器探查.注意,如果用该选项说明你正在测试的是代理服务器的延迟.
+
+-c count 在退出之前要发送多少次探查.
+
+-i interval 两次发送探查的间隔时间.
+
+-t timeout 对另一边(应该指webserver)的响应等待多久(如果超时还没接到响应应该会有异常给出)
+
+-S split 将得到的测试延迟分成两部分显示,一部分是和webserver连接的时间,另一部分是和HTTP server交换一个请求的时间.
+
+-s 当成功建立一个会话时,显示HTTP状态码(200, 404, etc.).
+
+-G 使用GET请求来替代HEAD请求:这意味着完整的page/file必须被传送(传递).注意在这种情况下你测试的不再是延迟(还是说你不再测试延迟,感觉应该是头一种对).
+
+-b 和-G一起使用.当使用这个选项时,可以显示传输速度(单位: KB/s)
+
+-B 和-G一起使用.让HTTP服务器压缩返回的数据: 大概意思是当你对HTTP服务器发送了好多的请求后,相应的HTTP不也会给你返回好多响应嘛,如果使用该选项的话会减少你的带宽的使用.
+
+-L x 和-G一起使用.限制传输的数据量为x.注意,这仅仅影响page/file的内容而不会影响headerdata(应该翻译为头部数据吧)
+
+-X 和-G一起使用.显示每次ping的数据传输量(不包含headers)
+
+-l 使用SSL连接:要想让该选项工作(翻译为生效感觉更恰当),你需要指定一个以https开头的链接或是指定443端口号
+
+-z 当使用SSL连接时:显示和X509 certificate(s)(证书)对等的指纹
+
+-a Audible(听的见的)ping(应该是你的每一次ping如果有反应的话,主机的喇叭就会叫)
+
+-f Flood ping(洪水攻击):两次ping不设间隔,即尽量快,而且会尽全力的利用你的电脑资源和网络带宽
+
+-m 显示机器可读的(易读的)输出(也会检查-o和-e)
+
+-o x,x,...  只和-m连用,作用是选择一个HTTP状态码作为OK状态码(感觉应该是正常情况下返回的是200,一旦返回的不是200我就停止继续ping了,同时也说明了对方的web server应该挂了)
+
+-e str 当状态码和-o指定的状态码不一样时,返回str字符串.
+
+-I str 要发送到webserver的UserAgent字符串(替代'HTTPing <version>').
+
+-R str 发送到webserver的Referer字符串.
+
+-r 对主机名只解析一次:这个选项会使解析跳出循环,以便于不计算DNS解析带来的延迟.当你仅仅想要测试1台webserver时,然而DNS对每个解析返回一个不同的ip地址时,也是有用的(设置轮流捡取roundrobin).
+
+-n warn,crit 将HTTPing转换为Nagios-plugin模式 1:当平均响应时间超过了'warn',返回退出状态码'1';当平均响应时间超过'crit',则返回退出状态码'2'.其它情况下返回退出状态码'0'(文中用的是then,我感觉它写错了,应该是than??)
+
+-N x 转换HTTPing到Nagios-plugin模式2: 当每一件事都很好,返回0,当任何事失败了,返回'x'.例如: 1 => Nagios 警告状态, 2 => Nagios 临界状态.
+
+-q 安静模式,仅返回一个退出状态码(eixt-code).
+
+-A,U,P 激活(启动)基本的认证,用户名跟着-U,密码跟着-P
+
+-F 尝试TFO(TCP Fast Open)当尝试连接到一台服务器时(对于Linux要3.7之前的内核版本)
+
+-V 显示httping版本号并退出
+
+KEYS
+按<CTRL> + <c>来退出程序.会显示一个测试报告.
+
+EXAMPLE
+httping -g http://localhost/
+在主机'localhost'上ping web服务器
+
+httping -h localhost -p 1000
+在主机'localhost'上指定的1000端口上ping web服务器
+
+httping -l -g https://localhost/
+使用SSL连接ping 'localhost'上的web服务器
+
+httping -g http://localhost/ -A -U username -P password
+使用基本的HTTP认证在主机'localhost'上ping web服务器
+
+
+
+
+

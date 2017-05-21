@@ -1,0 +1,319 @@
+6.2.2.Module Contents
+模块定义了几个函数、常量和一个异常.一些函数对于编译的正则表达式来说是完整功能函数的简化版本.大多数重要的应用一直使用的是编译的形式.
+
+re.compile(pattern, flags=0)
+编译一个正则表达式模式到一个正则表达式对象,这个正则表达式对象可以使用match()和search()方法进行匹配,描述如下.
+
+表达式的行为可以通过指定一个falgs值进行修改.flags值可以是下列变量的任意一个,combined using bitwise OR(|操作符)(这句话暂翻译为使用按位OR来编译的变量(用来修饰前面的variables))
+
+序列:
+prog = re.compile(pattern)
+result = prog.match(string)
+等价于:
+result = re.match(pattern, string)
+
+但是当一个表达式在单个程序里面要被复用几次的时候,用re.compile()并且保存正则表达式对象的结果,是更有效的.
+
+Note:
+被传递到re.compile()中最新模式和模块级别的匹配函数的编译版本被缓存,因此一次使用很少的正则表达式时不用担心编译正则表达式.
+
+-------------------------------------------flags start---------------------------------
+re.A
+re.ASCII
+使得\w \W \b \B \d \D \s
+\S只执行ASCII匹配而非完整的Unicode匹配(从这也能看出来ASCII应该是Unicode子集或是啥的,虽然没细看呢,但是前者支持的东西肯定没有后者多).该flag仅对Unicode模式是有意义的,对于byte模式即使加上也会被忽略,即对byte模式无意义.
+
+注意,考虑到向后兼容,re.U flag一直是存在的(和re.U同义的re.UNICODE和re.U的内嵌副本(?u)也是支持的),但是这个标志对于Python3来说是多于的,因为在Python3中默认的字符串编码就是Unicode(Unicode匹配不考虑bytes模式)
+
+re.DEBUG
+显示出被编译的表达式的调试信息.
+
+re.I
+re.IGNORECASE
+执行忽略大小写的匹配;表达式[A-Z]也会匹配小写字母.这个flag不受当前的locale的影响并且不出所料,也为Unicode字符工作.
+
+re.L
+re.LOCALE
+使得\w \W \b \B \s \S依赖于当前的locale(环境变量的意思).这个flag的使用是被劝阻的因为locale mechanism(本地环境机制)是非常不可靠的,无论如何它一次只处理一个"culture";你应该使用Unicode匹配来代替它,在Python3中字符串匹配默认使用的就是Unicode模式.这个flag仅仅在bytes模式下有意义.
+
+在版本3.5中被弃用,将会在版本3.6中移除:废除在字符串模式中使用re.LOCALE或者是re.ASCII.
+
+re.M
+re.MULTILINE
+当指定这个flag,模式字符'^'匹配字符串的开始和每行的开始(紧跟着每个换行);模式字符'$'匹配字符串的结尾和每行的结尾(immediately在每个换行之前).默认情况下,'^'紧匹配字符串的开始,'$'仅匹配字符串的结尾和字符串结尾的新行前.
+
+re.S
+re.DOTALL
+使得'.'这个特殊字符完全匹配任意一个字符,包括换行;不带这个flag时,'.'匹配除换行外的任意一个字符.
+
+re.X
+re.VERBOSE
+该flag可以帮你将正则写的更漂亮,可读性更强(通过将模式分隔为几块)并且物许添加注释.除非空白字符在一个字符集中或是字白字符前面有一个非转义的反斜杠外,其它情况下模式中的空白被忽略.当一行中包含一个不在字符集中或者前面没有放置一个非转义的反斜杠的#号时,从该#号开始到行尾的字符都会被忽略(言外之意就是作为注释被忽略).
+
+从上面这句话可知下面这两个匹配十进制数字的正则对象在功能上是相等的:
+a = re.compile(r"""\d + # the interal part
+                   \.   # the decial point
+                   \d * # some fractional digits""", re.X)
+b = re.compile(r"\d+\.\d*")
+*.在第一个式子中用的是"""而不是"或',所以是否re.X是和"""一起用呢
+-------------------------------------------flags end---------------------------------
+re.search(pattern, string, flags=0)
+扫描字符串查找第一个位置,在这个位置正则表达式模式产生一个匹配,并且返回一个相应的匹配对象.如果字符串中没有匹配上给定模式则返回None;注意这不同于在某种情况下在字符串中查找一个0长度的匹配.
+
+re.match(pattern, string, flags=0)
+如果在字符串开始的0个或多个字符匹配上了给定的正则表达式模式,则返回一个相应的匹配对象.如果字符串没有匹配上给定的模式则返回None;注意这不同于一个0长度的匹配.
+
+注意,即使是在MULTILINE模式下，re.match()也仅仅匹配字符串的开始而并不会匹配每一行的开始.
+
+如果你想要定位字符串中的所有匹配,可以使用search()代替(看一下seach() vs match()).
+*.目前看search()和match()的区别是前者会在字符串的任意位置匹配,而后者只匹配字符串的开头
+
+re.fullmatch(pattern, string, flags=0)
+如果整个字符串匹配给定的正则表达式模式,则返回一个相应的匹配对象.如果字符串没有匹配上给定的模式则返回None;注意这和0长度匹配还不一样.
+
+在3.4版本中新加入的.
+
+re.split(pattern, string, maxsplit=0, flags=0)
+通过pattern的出现来分割字符串.如果捕捉括号被用在模式中,则模式中所有组的文本也会被作为结果列表的一部分返回.如果maxsplit是非零的,at most maxsplit splits occur(暂译为大多数情况maxsplit splits会发生),字符串剩下的部分被作为列表的最后元素返回
+
+>>> re.split('\W+', 'Words, words, words')
+['Words', 'words', 'words.', ''] #可以看出即使字符串全都被匹配上,也会将"剩余的"空字符串给放到列表后面
+>>> re.split('(\W+)', 'Words, words, words.')
+['Words', ', ', 'words', ', ', 'words', '.', '']
+>>> re.split('\W+', 'Words, words, words.', 1)
+['Words', 'Words, words.']
+>>> re.split('[a-f]+', '0a3B9', flags=re.IGNORECASE)
+['0', '3', '9']
+*.在理解头两条语句时,结果中最后都是空字符串,要理解为当定位到最后一个.时,点前面的是words,点后面的自然就是空了.
+
+如果在分隔符中有捕获组并且该捕获组匹配在字符串的开头,则产生的结果列表的第一个元素是空字符串.如果捕获组匹配上了字符串的结尾则产生的结果列表的最后一个元素是空字符串(为也验证了我上一段所说的,匹配的时候它只负责找分隔符,而无论找到的分隔符两边是什么,两边找到东西了就将实际的输出到列表中,如果没找到,就是分隔符捕获到结尾或是开头的情况,则会将一边的空字符串输出).
+
+>>> re.split('(\W+)', '...words, words...')
+['', '...', ', ', 'words', '...', '']
+*.上面那句话的实践只得到了,只要模式匹配到了开头或是结尾,就会在结果列表的开头或结尾产生一个空字符串;而跟捕获组不捕获组对应不上
+
+在上面例子中,分隔符组件总是在结果列表中同样的相对指标被找到(应该想要表达的意思就是说在返回的列表中分隔符的位置和分隔符在字符串中的位置是一样的)
+
+Note: split()一般不使用空分隔符去分割字符串.如:
+
+>>> re.split('x*', 'axbc')
+['a', 'bc']   # 'x*'可以产生空字符串,但是实际上,程序没使用空字符串作为分隔符
+
+即使'x*'也匹配'a'前有0个'x','b'和'c'之间,'c'后面,但是当前这些匹配都被忽略.正确的行为(例如,如果上面的例子也用空字符串分割会返回['', 'a', 'b', 'c', ''])会在Python将来的版本中实现,但是由于这是一个向后兼容的改变,所以在这期间一个FutureWarning会被抛出.
+
+仅仅匹配空字符串的模式一般(当前?)不分割字符串.因为空字符串模式不匹配期望的行为,从Python3.5版本起一个ValueError会被抛出:
+
+>>> re.split("^$", "foo\n\nbar\n", flags=re.M)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  ...
+ValueError: split() requires a non-empty pattern match.
+
+在3.1版本中改变的:添加了可选的flags参数
+在3.5版本中改变的:支持空字符串模式去分割但是会抛出一个警告.仅仅能匹配空字符串的模式现在被拒绝(就是说模式为'x*'的这个例子,现在会产生两种结果,一种是FurtureWarning警告另一种是产生一个列表).
+
+re.findall(pattern, string, flags=0)
+返回一个由所有匹配上给定模式的非重复的匹配组成的字符串列表.字符串被扫描的方式是从左到右,并且返回的字符串列表中元素的顺序就是扫描字符串时发现的顺序.如果一个或是多个组存在于模式中,则返回一个组列表;如果模式中含有多于一个的组则返回一个元素列表.空匹配也会被包括在结果列表中除非它们(这个它们应该指的是空吧?)匹配上了另一个匹配的开始
+
+re.finditer(pattern, string, flags=0) 返回一个迭带器,该迭带器中的内容是由在字符串中匹配模式所产生的.并且扫描字符串的时候是从左到右的顺序,而迭带器中的元素的顺序和扫描时发现匹配的顺序是一样的.字的匹配也被包含在结果中除非它们(应该指的是空字符串吧?)匹配上了另一个新的匹配的开头(迭带器和元素这块是我按照意思乱翻译的,只是为了方便现在好理解,以后有更精确的解释再回头改)
+
+re.sub(pattern, repl, string, count=0, flags=0)
+返回字符串,啥样的字符串呢,就是通过用repl替换最左面非重叠出现的模式来获得的字符串.如果模式没有被发现,则字符串原样返回.repl可以是一个字符串也可以是一个函数;如果repl是一个字符串,则包含在其中的反斜杠也被会处理.也就是说,字符串中的\n被转换为一个换行符,\r被转换为一个回车,等等.像\&这种未知的转义则被遗弃(是\被遗弃还是\&都被遗弃,目前猜测为前者).像\6这种反向引用,也会用模式中的第6组被匹配上的子字符串去替换.例如:
+
+>>> re.sub(r'def\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*\(\s*\):',
+...        r'static PyObject*\npy_\1(void)\n{',
+...        'def myfunc():')
+'static PyObject*\npy_myfunc(void)\n{'
+
+如果repl是一个函数,它被每一个非重叠出现的模式所调用.函数需要一个匹配对象参数,并且返回替换的字符串.
+
+>>> def dashrepl(matchobj):
+...     if matchobj.group(0) == '-': return ' '
+...     else: return '-'
+>>> re.sub('-{1,2}', dashrepl, 'pro----gram-files')
+'pro--gram files'
+>>>re.sub(r'\sAND\s', ' & ', 'Baked Beans And Spam', flags=re.IGNORECASE)
+
+模式可以是一个字符串或是一个正则表达式对象.
+
+可选参数count是要被替换的模式出现的最大次数;count必须是一个非负整数.如果被忽略了或者为0,则所有的出现都会被替换.模式的空匹配被替换仅仅是当没有邻近一个先前的匹配,因此sub('x*','-', 'abc')返回'-a-b-c-'
+
+在字符串类型repl参数中,除了上面提到的字符转义和反向引用外,\g<name>将使用通过被命名为name的组匹配到的子串,按照通过(?P<name>...)语法定义的.\g<number>使用相应的组号;因此\g<2>等价于\2,但是是清晰的在一个像\g<2>0这样的替换中.\20将被解释为到组20的引用,而不会解释为一个到组2并且后面跟着字面意义的字符'0'的引用.反向引用\g<0>在整个被正则匹配上的子串替换.
+
+在3.1版本中改变的:添加了可选参数flags
+
+在版本3.5中改变的:没有匹配的组被空字符串替换.
+
+自从3.5版本被弃用,在3.6版本中会被移除:由'\'和ASCII字符组成的未知转义现在会抛出一个弃用警告并且会在Python3.6中被禁用.
+
+re.subn(pattern, repl, string, count=0, flags=0)
+执行和sub()相同的操作,但是它返回的是一个tuple(new_string, number_of_subs_made)
+
+在3.1版本中改变的:添加了可选参数flags
+
+在3.5版本中改变的:未改变的组被用空字符串替换
+
+re.escape(string)
+转义模式中的所有字符除了ASCII字符,数字和'_'.这对于要匹配含有正则元字符的任意字面意义的字符串来说是有用的.
+
+在3.3版本中改变的:'_'字符不再被转义
+
+re.purge()
+清除正则表达式缓存.
+
+exception re.error(msg, pattern=None, pos=None)
+当一个被传递到这里函数之一的字符串不是一个有效的正则表达式时会抛出异常(例如,字符串可能包含了未匹配的括号)或者当在编译或是匹配时发生了其它的错误也会抛出异常.如果一个字符串没有匹配上任何节模式那从来都不是一个错误.函数实例有下面的额外属性:
+
+msg
+未格式化的错误信息
+
+pattern
+正则表达式模式
+
+pos
+编译失败处的模式引索
+
+lineno
+与pos相一致的行
+
+colno
+与pos相一致的列
+
+在3.5版本中改变的:添加了额外的属性.
+
+6.2.3. Regular Expression Objects
+编译的正则表达式对象支持下列的方法和属性:
+
+regex.search(string[, pos[, endpos]])
+扫描字符串查找第一个和给定正则表达式相匹配的位置,并返回一个相应的匹配对象.如果字符串中没有匹配上给定的正则表达式,则返回None;注意这和某种情况下在字符串中查找一个0长度的匹配是不同的.
+
+第二个参数pos是可选的,它的作用是给出一个索引,指示我们从字符串中的什么位置开始搜索;pos的默认值是0.这不完全等同于对字符串的分片;'^'字符匹配字符串的真实开始,这个位置刚好在一个换行之后,但是未必是在开始搜索的索引处.
+
+可选参数endpos限定了字符串将被搜索多远;它呈现的效果是好像字符串就endpos这么长,因此仅仅搜索pos到endpos-1这段字符串进行模式匹配;如果endpos小于pos,则不会有匹配被发现;否则,如果rx是一个被编译的正则表达式对象,rx.search(string, 0, 50)等价于rx.search(string[:50], 0)
+
+>>> pattern = re.compile("d")
+>>> pattern.search("dog")   # Match at index 0
+<_sre.SRE_Match object; span=(0, 1), match='d'>
+>>> pattern.search("dog", 1)  # No match; search doesn't include the "d"
+
+regex.match(string[, pos[, endpos]])
+如果有0个或是多个字符匹配上了给定字符串的开头,则返回一个相应的匹配对象.如果字符串没有匹配上给定的模式,则返回None;注意这不同于匹配一个0长字符串.
+
+pos参数和endpos参数和search()方法中讲的相同.
+
+>>> pattern = re.compile("o")
+>>> pattern.match("dog")  # No match as "o" is not at the start of "dog"
+>>> pattern.match("dog", 1)  # Match as "o" is the 2nd character of "dog".
+<_sre.SRE_Match object; span=(1, 2), match='o'>
+
+如果你想要定位字符串的任意位置而非只是开头的话可以使用search()来代替match()(具体的可以看一个search() vs. match()).
+
+regex.fullmatch(string[, pos[, endpos]])
+如果整个字符串匹配上了给定的正则表达式,则返回一个相应的匹配对象.如果字符串没有和给定的模式相匹配上,则返回None;注意这不同于匹配一个0长度的字符串.
+
+可选参数pos和endpos和search()方法中介绍的相同,不明白的可返回查看.
+
+>>> pattern = re.compile("o[gh]")
+>>> patter.fullmatch("dog")  # No match as "o" is not at the start of "dog".
+>>> pattern.fullmatch("ogre")  # No match as not the full string matches.
+>>> pattern.fullmatch("doggie", 1, 3) #Matches with given >>> limits(第1位开始第3-1位结束,即'og')
+<_sre.SRE_Match object; span=(1, 3), match='og'>
+*.通过例子可以知道,当匹配上以后回显中的span后面括号中的数字显示的是你(第一次?)匹配上的内容的位置,就该例来说为1到3-1,和list一样,不包括尾数
+
+在版本3.4中新添加的.
+
+regex.split(string, maxsplit=0)
+和上一节的re.split()相同,只不过这里是将上一节的pattern参数换了一种形式罢了(正则表达式对象)
+
+regex.findall(string[, pos[, endpos]])
+和上一节提到的findall()函数相似,只是这里将pattern换了一种形式(正则表达式对象),但是它也接受pos和endpos参数来限制搜索的区域,有点像match()
+
+regex.finditer(string[, pos[, endpos]])
+和上一节的finditer()函数类似,只不过是将pattern换了一种形式罢了(正则表达式对象),但是也接受可选的pos和endpos参数来限制搜索的范围,类似于match()
+
+regex.sub(repl, string, count=0)
+和上一节的sub()函数相同,只不过上一节pattern是出现在参数的位置,这里是将pattern给编译为正则对象,然后用正则对象去调用sub()函数,结果其实是一样的,形式不同而已.
+
+regex.subn(repl, string, count=0)
+等同于上一节提到的subn()函数,只不过上一节pattern是出现在参数的位置,这里是将pattern给编译为正则对象,然后用正则对象去调用sub()函数,结果其实是一样的,形式不同而已.
+
+regex.flags
+正则表达式的flags.这是一个被给到compile()函数中的flags的结合,在模式中的任何内联flags,和隐式的flags如UNICODE如果模式是一个Unicode字符串.
+
+regex.groups
+在模式中捕获组的编号
+
+regex.groupindex
+一个由任意被(?P<id>)定义的符号组名到组编号的映射组成的字典.如果模式中没有使用符号组,则字典是空的.
+
+regex.pattern
+模式字符串，从这个模式字符串正则表达式对象被编译.
+
+6.2.4. Match Objects
+匹配对象总是有一个布尔值True(接后一句这一句我觉得应该翻译为匹配成功的对象应该总有一个布尔值True).因为match()和search()如果没有匹配上的话会返回None,你可以用一个简单的if语句来测试一下匹配是否成功:
+
+match = re.search(pattern, string)
+if match:
+    process(match)
+
+匹配对象支持下列的方法和属性:
+*.感觉它这里面提到的'匹配对象'目前指的应该就是r=re.match()和m=re.search()中的r和m
+
+match.expand(template)
+返回通过用反斜杠替换模板字符串template后的字符串,和sub()方法干的事差不多.转义符,例如\n会被转义为适当的字符;数字反向引用(\1,\2)和命名反向引用(\g<1>,\g<name>)被相应组的内容所替换.
+
+match.group([group1, ...])
+返回一个或多个匹配到的子组.如果只有一个参数,则结果是一个('一'重读,强调的是'一')字符串;如果有多个参数,则结果是一个元组,且该元组的元素个数和给出的参数个数相同.在没有参数的情况下,group1默认是0(即将整个匹配给返回).如果一个groupN参数是0,则返回的字符串为整个匹配的字符串;如果组号在范围[1到99],则返回的字符串就是相应的组匹配到的字符串.如果一个组号是负的或是大于模式中定义的组号,则会抛出一个IndexError异常.如果一个组被包含在一个没有匹配上的模式里,则相应的结果是None。如果一个组被包含在被匹配了多次的模式的一部分,则将最后一次匹配上的字符串返回.
+
+>>> m = re.match(r"(\w+) (\w+)", "Isaac Newton, physicist")
+>>> m.group(0)  # 返回完整的匹配(The entire match)
+'Isaac Newton'
+>>> m.group(1)  #第一个被括号包围的子组(The first parenthesized subgroup)
+'Isaac'
+>>> m.group(2)  #第二个被括号包围的子组(The second parenthesized subgroup)
+'Newton'
+>>> m.group(1, 2)  #由多个参数组成的元组(Multiple arguments give us a tuple)
+('Isaac', 'Newton')
+*通这这个例子再看上面的那段话,解释几个词,第一个是模式中定义的组数,其实指的就是第一个参数里面有几对括号,像这个例子模式中定义的组数就是2;最后一句可以用例子r
+= re.match("(..)+", "abcdef")  r.group(1) 去理解.
+
+如果正则表达式使用(?P<name>...)语法,则groupN也可以是一个字符串(组名)通过组名来识别组.如果一个字符串参数在模式中没有被用作组名,则会抛出一个IndexError的异常.(也就是说group()中也可以不是1,2,3这样的数字,可以是字符串，但是这个字符串不是说咱们瞎写的,必须是模式中使用(?P<name>...)语法,则正确的字符串为该语法中name指定的内容.)
+
+下面给出一个稍微(适度)复杂一点的例子:
+
+>>> m = re.match(r"?P<first_name>\w+ (?P(last_name)\w+)", "Malcolm Reynolds")
+>>> m.group('first')
+'Malcolm'
+>>> m.group('last_name')
+'Reynolds'
+
+被命令的组也可以通过它们的位置索引来引用它们:
+
+>>> m.group(1)
+'Malcolm'
+>>> m.group(2)
+'Reynolds'
+
+如果一个组匹配了多次,则仅仅最后一次匹配是accessible(被接受的,可理解的):
+
+>>> m = re.match(r"(..)+", "a1b2c3")  # 匹配了三次(Matches 3 times)
+>>> m.group(1)  # 仅仅将最后一次的匹配返回(Returns only the last match)
+'c3'
+
+match.groups(default=None)
+返回一个由所有匹配到的子组所组成的元组,从1开始到最后一组,无论有多少组.默认的参数被用于不参加匹配的组(通过下面第二个例子,可以看出该默认参数用来指定没有匹配上的组的默认值,即如果groups('0')时,我在模式中给出10个组,但是其实第一个组就已经完全将给定的字符串给匹配完了,所以此时生成的元组为('字符串', 9个0));默认是None
+
+例如:
+
+>>> m = re.match(r"(\d+)\.(\d+)", "24.1632")
+>>> m.groups()
+('24', '1632')
+
+如果我们在整数后面安排可选的小数或是其它任何东西,则并不是所有的组都参加匹配.则这些组将会由默认的None值所替换,除非你设定了default参数值:
+
+>>> m = re.match(r"(\d+)\.?(\d+)?", "24")
+>>> m.groups()  #第二个组默认值为None(The second group defaults to None)
+('24', None)
+>>> m.groups('0')  #现在第二个参数的默认值为'0'(Now, the second group defaults to '0')
+('24', '0')
+

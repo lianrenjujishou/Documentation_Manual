@@ -1,0 +1,38 @@
+UNAME(1)         USER Commands               UNAME(1)
+
+NAME
+uname - 打印系统信息
+
+SYNOPSIS
+    uname [OPTION]...
+DESCRIPTION
+    打印某个系统信息,无选项的时候和-s的行为一样
+-a, --all
+    按下面的顺序打印所有的信息,如果-p和-i都是未知的话输出会忽略掉这两个选项的内容
+
+-s, --kernel-name
+    打印内核名称
+
+-n, --nodename
+    打印网络节点主机名
+
+-r, --kernel-release
+    打印内核发行版本
+
+-v, --kernel-version
+    打印内核版本(时间信息多一些,不是很明白和-r的区别)
+
+-m, --machine
+    打印机器硬件名称(输出的信息应该是我们所谓的架构名)
+
+-p, --processor
+    打印处理器类型或者'unknown'
+
+-i, --hardware-platform
+    打印硬件平台或是'unknown'
+
+--help 
+    显示这个帮助页并退出
+
+--version
+    显示uname命令的版本信息并退出

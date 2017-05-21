@@ -1,0 +1,431 @@
+4.更多的控制流工具
+除了上节介绿的while语句外,Python还明白其它语言中常见的控制流语句.
+4.1. if语句
+可能人们最了解的语句类型就是if语句了.例如:
+    >>> x = int(input("Please enter an integer:"))
+    Please enter an interger: 42
+    >>> if x < 0:
+    ...	    x = 0
+    ...	    print('Negative changed to zero')
+    ...	elif x == 0:
+    ...	    print('Zero')
+    ...	elif x == 1:
+    ...	    print('Single')
+    ...	else:
+    ...	    print('More')
+    ...
+    More
+if语句中可以有0或多个elif部分,并且最后的else部分是可选的.elif是else if的缩写,用缩写的形式可以有效的避免过度缩进.Python中的if ... elif ...序列是对于其它语言中的switch语句或case语句的一个替换
+4.2. for语句
+python中的for语句和你在C或Pascal中使用的for有些不同.在pascal中for循环是遍历的等差数列,C语句中可以让用户定义步进数和停止执行的条件,而python中的for语句遍历的是任何的序列(如列表或字符串)并且是按照字符或元素出现在序列中的顺序进行遍历.例如:
+    >>> # Measure some strings:
+    ... words = ['cat', 'window', 'defenestrate']
+    >>> for w in words:
+    ...    print(w, len(w))
+    ...
+    cat 3
+    window 6
+    defenestrate 12
+
+如果你想在循环语句中修改你遍历的列表,遍历的对象你就要写成words[:],而不能只写words,比如说你要当满足条件时向什么位置插入一个数据可以用列表的insert()属性,下面见例子详解:
+**.写在例子前面:第三章中的官翻中已经写明,每一个分片都会产生一个新的列表,列表里面的是你选中的元素,大家变量在内存中的存储应该都了解,其实变量存的只是内存中的一个地址.这样看来,既然分片产生的是新的列表,则words[:]和words在内存中存储的位置是不同的,相当于重新给words[:]又划分了一块内存,而不只是将words在内存中的地址传给words[:].明白了这个机制后还需要明白python中的for循环是怎么一个工作流程,因为没有读源码,所以这个流程是我通过例子猜的,应该没啥问题,比如有一个循环为:
+    >>> for w in words[:]:
+    ...	    if len(w) > 6:
+    ...		words.insert(0, w)
+    ...
+就拿该循环来说,首先看第一行,在words[:]中按顺序取出第一个元素,然后将该元素值赋给w,此时w有值为'cat',再看第二句,判断w值的长度是否大于6,可以看出'cat'长度为3小于6所以第三行的插入不执行,接下来是重点了,for循环中它对序列的长度读取是每执行一次循环都要检测一下该序列的长度,而不是说就第一次读长度,以后都按这个长度取值,故现在引出刚刚说的序列这块要利用分片会重新生成一个列表的特性用words[:]而不用words,就是因为,如果我此时用的是word,则在w第三次被赋值时得到的是'fendestrate',它的长度大于6,所以会执行第三句,给words序列的首位插入一个'fedenestrate',此时的words为['defenestrate', 'cat', 'window', 'defenstrate'],此时又回到for进行取值了,for还是先检查长度和现在的长度对比,没插入之前的长度是3,现在长度是4,发现还没到头还可以继续取值,但此时取的值还是'defenestrate',因为你是在0位置插的值,所以你现在取4还是'defenestrate',然后将值赋给w，第二条语句检查w长度发现大于6又会在0位置插数据,这样列表长度又增加了,故下次for再检测的时候发现还没到头,但是取的值其实一直都是一个,只不过是前面插值将它的位置向后放了一个,这样就导致了死循环.但是如果用words[:]的话,因为和words在内存中是两个位置,所以就成了,在A处检查数据,发现有长度大于6的就插入B处,这样就不会造成死循环了(最后再强调关于for环境遍历序列需要注意的两件事:1.如果序列分片的话是重新在内存中划了一片空间
+2.for循环每次都会检查一下序列的长度,而不是说就第一次检查长度),用一个简单的循环就可验证注意事项2:
+    >>> words = ['cat', 'window', 'defenestrate']
+    >>> for w in words:
+	    print(len(words))
+	    if len(w) > 6:
+		words.insert(0, w)
+注意看prin(len(words))的返回值.
+4.3. range()函数
+如果你想要遍历一个数字序列,则python内建的range()方法会很有用.它会创建一个等差数列:
+    >>> for i in range(5):
+    ...	    print(i)
+    ...
+0
+1
+2
+3
+4
+可以看出range()函数中给出的数字5是不包括在被创建的序列里的,这个数序的意是包括几个数,所以range(5)表示创建一个包含5个数的等差数列，但不要忘了创建的第一位是0
+range()函数还可以指定等差数列的起始值
+    >>> rang(5, 10)
+    5, 6, 7, 8, 9
+还可以指定等差的步进值
+    >>> range(0, 10, 3)
+    0, 3, 6, 9
+并且步进值还可以是负的:
+    >>> range(-10, -100, -30)
+    -10, -40, -70
+可以利range()函数和len()函数来遍历序列的索引,很常用!:
+    >>> a = ['Mary', 'had', 'a', 'little', 'lamb']
+    >>> for i in range(len(a)):
+    ...	    print(i, a[i])
+    ...
+0 Mary
+1 had
+2 a
+3 little
+4 lamb
+虽然大多数情况下这样用,但是用enumerate()函数还是比较方便的
+如果你直接打印一个range()会发生奇怪的事情:
+    >>> print(range(10))
+    range(0, 10)
+在很多时候range()函数返回的好像是一个列表,但实际上它返回的不是列表.当你遍历range()时,它其实返回的是一个具有连续条目的一个对象,这样会节省空间.
+我们说这样的对象是可迭带的,那是因为range()满足了可以作为一个函数和期望迭代器能够从range()返回的对象中获取连续的条目直到条目供已被耗尽的这样一个目标.从上面可以看出for语句是这样的迭代器,list()是另一个,它自用可迭代的对象中的条目创建列表.    *.在python2.x中range()返回的是列表
+稍后我们会看到更多的返回的是迭代对象的函数,并且返回的迭代对象可作为参数对象
+4.4. 循环中的break和continue语句和else从句(或叫子句)
+python中的break语句和C语言中的一样,作用都是退出所在for或while循环(如果循环里面还有一个循环,break是在最里面的循环里,则退出的仅仅是里面的循环,和最外面的循环没关系,即跳出其本身所在的最小循环)
+循环也可以有else从句,它是在序列耗尽后或条件为false时执行,但是如果是循环中碰到break了,则else子句不执行,因为break跳出的是循环还该else也属于循环的一部分.
+    >>> for n in range(2, 10):
+    ...	    for x in range(2, n):
+    ...		if n % x == 0:
+    ...		    print(n, 'equals', x, '*', n//x)
+    ...		    break
+	    else:
+		# 本例中,当x在range(2, n)中找不到值时,会执行该else语句
+    ...
+2 is a prime number
+3 is a prime number
+4 equals 2 * 2
+5 is a prime number
+6 equals 2 * 3
+7 is a prime number
+8 equals 2 * 4
+9 equals 3 * 3
+(上面的代码是正常的,看清楚,这里的else子句属于for循环而不是if语句)
+当else从句用在循环中时,和if语句及try语句相比,还是和try语句的共同点多一些:当没有异常发生时,try语句的else从句运行,当没有碰上break的时候循环的else从句运行.想要了解更多关于try语句和异常的内容,可以看Handling Exceptions.
+continue语句也是从C语言中借鉴来的,它的作用是退出本次循环继续下一循环(比如循环12345这五个数,现在运行了三次取的是3,如果此时碰到continue了,则该循环中continue后面的语句就不执行了,继续回到头执行4.而break不一样,还是如果执行到3的某一句碰到了break,则该循环的4和5就不进行遍历了,直接退出执行该循环后面的语句了)
+    >>> for num in range(2, 10):
+	    if num % 2 == 0:
+		print("Found an even number", num)
+		continue
+	    print("Found a number", num)
+Found an even number 2
+Found a number 3
+Found an even number 4
+Found a number 5
+Found an even number 6
+Found a number 7
+Found an even number 8
+Found a number 9
+
+4.5. pass 语句
+pass语句表示什么都不做.它被用于当一个句子仅仅是在语法上要这么做,但是程序本身没有任何动作的时候.举例:
+    >>> while True:
+    ...	    pass #
+只是因为前面有while循环了,但是循环中我啥都不想做,如果什么都不写的话while运行不了会出错,但加上pass就不会出错了,这就是为了满足while的语法完整还不想用while语句做点什么
+有时用pass语句来创建最小的类:
+    >>>　class MyEmptyClass:
+    ...    pass
+    ...
+pass有时被用作函数或是条件语句中的主体部分(就是条件后面需要执行的那部分)中的占位符,即此处的逻辑你还没有想好,你可以先去写别的东西,回过头想好以后再来实现这个函数或条件主体,执行的时候pass会被忽略掉:
+    >>> def initlog(*args):
+    ...	    pass #记得到时实现这部分
+    >>> if a>b:
+	    pass #记得到时实现这部分
+
+4.6.定义函数
+让我们创建一个任意范围的Fibonacci序列函数
+>>> def fib(n): #fabonacci序列到n
+...	'''Print a Fibonnacci series up to n.'''
+...	a, b = 0, 1
+...	while a < n:
+...	    print(a, end=' ')
+...	    a, b = b, a+b
+...	print()\
+...
+>>> #现在我们来调用刚刚定义的函数:
+... fib(2000)
+0 1 1 2 3 5 8 13 21 34 55 39 144 233 377 610 987 1597
+关键字def引入了函数的定义.def后必须紧跟着函数名和被括号括起来的形参列表.函数中被执行的语句体被须从下一行开始,而且语句体必须相对def行有缩进.
+函数体的第一条语句可以不是一条语句而是普通的字符串,这个字符串通常是函数的文档字符串.(更多关于文档字符串的内容可以参考Documentation String部分)有工具可以使用docstrings自动的生成在线文档或打印文档,或是利用docstrings让用户交互式的浏览代码;在你写的代码中包含docstrings是一个好的习惯.
+执行函数时会引进一个新的符号表用于存储本地的函数变量.更准确的说,函数中的所有变量赋值都存在本地符号表中;然后引用变量时首先从本地的符号表中找,如果没有的话再从函数执行后产生的本地符号表中找,如果还没有再从全局符号表中找,还没有的话从存储内建变量名称的表中查找.因此,在一个函数中,尽管全局变量也可能被引用,但不能给全局变量直接赋值(除非变量前有global关键字).变量引用总共涉及到四个表,优级级是:本地符号表>父函数的本地符号表>全局符号表>内建变量表(本地符号表说白了就是一个函数内部的变量;父函数的本地符号表这个也好理解它是对于函数嵌套中的子函数来说的;全局符号表及内建变量表就不解释了,人们经常戏称这个顺序为LEGB,官方文档中对于我这里的'父函数的本地符号表'用的是enclosing fuction,网上翻译的也乱七八糟啥闭包函数的,就按父函数去理解就很好)
+
+当调用一个函数的时候,实参会被引入该函数的本地符号表;因此参数通过调用value来进行传递(这里的value引用的是对象而不是对象的值).当一个函数调用另一个函数时,会为被调用的函数创建一个新的符号表(此处有注脚)
+定义函数时会将函数名引入当前的符号表.函数名字的值有一个类型,解释器可以将该类型识别为一个用户自定义的函数.这个值可以被赋给另一个名字,而这个名字也可以作为一个函数使用,这是一个函数重命令机制,也可以用咱们平时知道的别名(alias)去理解:
+    >>> fib
+    <function fib at 100423d0>
+    >>> f = fib
+    >>> f(100)
+    0 1 1 2 3 5 8 13 21 34 55 89
+由其它的语言来看,你可能认为fib不是一个函数而是一个程序,因为fib并没有返回值.其实函数中即使没有return语句,也会有返回值的,只是返回了一个None(这是一个内建的名字)值被程序忽略掉了.通常如果函数仅仅返回一个None值是会被解释器抑制输出的.如果你真想看它的返回值的话可以用print():
+>>> fib(0)
+>>> print(fib(0))
+None
+我们可以写一个函数用来返回一个Fibonacci序列的列表,而不仅仅是打印这些数:
+    >>> def fib2(n):
+    ...	'''Return a list containing the Fibonacci series up to n.'''
+    ...	result = []
+    ...	a, b = 0, 1
+    ...	while a < n:
+    ...	    result.append(a)
+    ...	    a, b = b, a+b
+    ...	return result
+    >>> f100 = fib2(100)
+    >>>f100
+[0, 1, 1, 2, 3, 5, 8 13, 21, 34, 55, 89]
+这个例子演示了一些新的python功能:
+    函数中的return语句会返回一个值.如果return后面没有要返回的表达式则返回的是None,没有return语句也返回None,如果函数已经执行到尾部了还没有return语句,也会返回none(最后一个可能是我自己猜的,原文是Falling off the end of a function also returns None)
+    result.append(a)语句调用了一个列表对象result的append()方法.方法是属于对象的,并且方法被命名为obj.methodnamed(即对象.方法名),其中对象也可能是表达式,方法名是在该类对象中定义的方法,可见对象的方法不能脱离对象单独使用,所以经常可以见到不同类型的对象引用的方法名子是一样的,就是因为虽然方法名子一样,但是其实是在两个地方定义的,并不是引用的一个位置(我们可以利用Classes(类)来定义我们自己的对象类型和方法),在本例中append()方法是被定义在list对象中的,它的作用是在列表最后添加一个元素,在本例中result.append(a)相当于result = result + [a],但是比后者效率更高
+这里还有一个递归递用函数自身的例子,可参考:
+----------------A----------------------
+def Dat_Function():
+    my_var = raw_input("Type \"a\" or \"b\": ")
+
+    if my_var != "a" and my_var != "b":
+        print  "You didn't type \"a\" or \"b\".  Try again."
+        print " "
+        Dat_Function()
+    else:
+        print my_var, "-from Dat_Function"
+        return my_var
+
+
+def main():
+    print Dat_Function(), "-From main()"
+
+main()
+----------------A------------------------
+Now, if I input just "a" or "b",everything is fine. The output is:
+----------B-----------
+Type "a" or "b": a
+a -from Dat_Function
+a -From main()
+---------B-------------
+But, if I type something else and then "a" or "b", I get this:
+-----------C----------------------
+Type "a" or "b": purple
+You didn't type "a" or "b".  Try again.
+
+Type "a" or "b": a
+a -from Dat_Function
+None -From main()
+-----------C-----------------------
+说的就是在上面的代码中,如果他第一次输入的是a或b,则结果是他想要的即 a -from Dat_Function   a -From main(),但是一旦他第一次输的不是a或b,递归调用函数自身后再输a或b,  给出的结果就是a -from Dat_Function None -From main(),下面是正确的代码,其实仅仅是在if语句中的函数前面加了一个return
+————————————————————————————————————————————————————————————————————————
+def Dat_Function():
+    my_var = raw_input("Type \"a\" or \"b\": ")
+
+    if my_var != "a" and my_var != "b":
+        print  "You didn't type \"a\" or \"b\".  Try again."
+        print " "
+        return Dat_Function()
+    else:
+        print my_var, "-from Dat_Function"
+        return my_var
+
+
+def main():
+    print Dat_Function(), "-From main()"
+
+main()
+————————————————————————————————————————————————————————————————————————
+4.7. 更多关于函数的
+定义函数时的形参数量可以是一个变量,就是说可以不规定形参数量一定是1个或是2个,可以是一个变量,根据实际情况来决定实际的数量.下面就有三种方式可以实现,并且这三种方式可以结合使用:
+4.7.1. 在定义函数中给参数设定默认参数值
+最有用的方式就是给一个或多个参数指定一个默认值.下面的例子中,调用函数的时候不用将所有形参的值都给出,因为有的形参已有默认值:
+def ask_ok(prompt, retries=4, complaint='Yes or no, please!'):
+    while True:
+	ok = input(prompt)
+	if ok in ('y', 'ye', 'yes'):
+	    return True
+	if ok in ('n', 'no', 'nop', 'nope'):
+	    return False
+	retries = retries - 1
+	if retries < 0:
+	    raise OSError('uncooperative user')
+	print(complaint)
+可以用下面几种方式调用该函数:
+    1.在调用的时候仅仅给出必须的参数(即prompt):ask_ok('Do you really want to quit?')
+    2.给出一个有默认值的参数:ask_ok('OK to overwrite the file?', 2)
+    3.给出所有的参数:ask_ok('OK to overwrite the file?', 2, 'Come on, only yes or no!')
+    总结:函数中没有给定默认值的形参,调用该函数时一定要给该形参传值,对于函数中有默认值的形参,调用时可传值也可不传值,如果给多个有默认值的参数传值时,在没给出具体形参名子的情况下,要按形参在函数中的实际顺序传值.
+在上面这个例子中又引入了关键字in,它的作用是测试某个值是否包含在in后面指定的序列中
+函数参数的默认值如果是变量则取的是最靠近函数定义范围的那一个,它这么说不怎么严谨,因为python执行脚本的过程我还没看,就拿例子的执行结果猜测:它这里说的最靠近函数定义范围指的不是整个函数,而是拿def关键字来说的,说白点就是取的是最靠近def的那个变量:
+i = 5
+def f(arg=i):
+    print(arg)
+i = 6
+f()
+打印的结果是5,接上面说,而且python应该有个从上到下的预处理的过程,所以如果该例没有i =5这一句的话,执行会出错,会提示没有变量i,既使函数下面有个i = 6
+python在执行python脚本前应该会对脚本有个预处理,而这个预处理对于函数的默认值的影响就是,函数中的默认值只会被赋一次值.但是可变类型,如list,dictionary,类的实例来说不适用,先看例子然后我说自己的理解:
+例一:
+def f(a, L=None):
+    if L is None:
+	L = []
+    L.append(a)
+    return L
+print(f(1))
+print(f(2))
+print(f(3))
+执行结果是:
+[1]
+[2]
+[3]
+例2:
+def f(a, L=[]):
+    L.append(a)
+    return L
+print(f(1))
+print(f(2))
+print(f(3))
+执行结果是:
+[1]
+[1, 2]
+[1, 2, 3]
+猜测的执行过程:首先函数对L=None定义的时候,要看一下L=后面值的类型,是可变的,还是不可变的,先看例1,如果是不可变的,程序处理的时候可能会先将变量L的值先存在另外一个变量里,然后你下面所有的操作都正常执行,不管你将L给赋啥值,但是当函数退出后,先前用于存储变量L值的那个临时变量又会将None重新赋给L,这样你下次再调用该函数的时候L默认值还是None
+然后看例2,如果形参后的数据是可变的,则在处理函数体的时候,对L的改变都会保存下来,会影响后面的调用结果;再解释一下就是说对于函数中有默认值的,程序执行时会先看内存中L的指向地址处存放的数据类型是可变的还是不可变的,如果是不可变的会将L的值先存到另一个临时变量中,然后正常函数体中的语句,执行完后,临时变量再将原L值还给L,如果形参L后的值是可变的,则没有将L中的值先放到临时变量这一步,直接就是处理函数体的语句,然后退出,如果函数体语句中有对L做改变,改变会保留;用这个理论来解释上面提到的def
+f(arg=i)并不矛盾,虽说你现在看着arg的值i是个变量,但是别忘了执行脚本前有一个预处理i已经被一个真实值5所取代了,所以在调用函数的时候系统会认为arg=5,而5是个常数是不可变的.(当然在没看原码的情况下,这段话是自己臆想出来的,但就目前这个阶段来看这段话是适用的,以后如果接触到其它例子或是有幸看到原码的话不对的地方再改)
+
+4.7.2. 关键字参数
+函数能以关键字参数kwarg=value的形式调用.看下例:
+def parrot(voltage, state='a stiff', action='voom', type='Norwegian Blue'):
+    print("-- This parrot wouldn't", action, end=' ')
+    print("if you put", voltage, "volts through it.")
+    print("-- Lovely plumage, the", type)
+    print("-- It's", state, "!")
+该函数中形参包括了在调用时一个必须要传值的参数voltage,和三个可选参数state,action,type,之所以说是可选因为它们都有默认值,即使不给这三个参数赋值在函数体中调用的时候也不会出错,可以用下面几种方式调用上面的函数:
+parrot(1000) #一个以位置参数的形式传值
+parrot(voltage=1000) #一个以关键字的形式传值
+parrot(voltage=10000, action='vooooom')	#两个以关键字形式传值
+parrot(action='voooom', voltage=10000)	#两个以关键字形式传值,通过和上一条对比可以看出如果以关键字形式传值的话不必顾虑形参在函数定义中的实际顺序
+parrot('a million', 'bereft of life', 'jump')	#三个以位置参数的形式传值
+parrot('a thousand', state='pushing up the daisies')	#一个位置参数传值,一个关键字参数传值
+但是下列的引用方式是无效的:
+parrot()    #一个必要要被传值的参数没有值(voltage)
+parrot(voltage=5.0, 'dead') #关键字参数后面不能跟一个非关键字参数
+parrot(110, voltage=220)    #参数被重复传值,110在第一位表示给第一个形参传值,voltage是关键字参数表示给voltage这个关键字传值,但是第一个形参和voltage是一个参数,故造成了重复
+parrot(actor='John Cleese') #未知的关键字参数,也就是说定义函数时形参里面没有叫actor的关键字参数
+在引用函数时,关键字参数必须位于位置参数后面.利用关键字参数传值的时候,你所给定的关键字必须是函数中已经定义了的,如上例中actor就没有在函数中定义,所以调用肯定会报错.并且用关键字参数进行传值的时候,你调用时关键字的位置可以和函数定义时的位置不一样.对于必要的参数,如此例中的voltage,在调用时即可以在函数参数的位置直接给定一个值,也可以在任意位置参用voltage=值的形式.无论是位置参数还是关键字参数,不能重复赋值,即一个参数只能有一个值,下面就是对参数重复赋值的例子:
+    >>> def function(a):
+    ...	pass
+    ...	
+    >>> funtion(0, a=0)
+    Traceback (most recent call last):
+      File "", line 1, in?
+    TypeError: function() got multiple values for keyword argument 'a'
+还有两个形参是比较重要的,一个是**name,一个是*name.**name它的值是一个字典类型的,包括了除在函数定义时给定的关键字参数外,你指定的其它关键字参数(就是说**name的出现打破了函数定义时参数的固定数目).*name的值是一个数组,该数组中包含除了函数定义时位置参数外的其它位置参数.需要注意的是在定义函数时,*name一定要在**name前面.见下例:
+def cheeseshop(kind, *arguments, **keywords):
+    print("-- D you have any", kind, "?")
+    print("-- I'm sorry, we're all out of", kind)
+    for arg in arguments:
+	print(arg)
+    print("-" * 40)
+    keys = sorted(keywords.keys())
+    for kw in keys:
+	print(kw, ":", keywords[kw])
+上面这个函数可以用下面的方式进行调用:
+cheeseshop("Limburger", "It's very runny, sir.", "It's really very, VERY runny, sir",shopkeeper="Michael Palin", client="John Cleese", sketch="CheeseShop Sketch")
+执行结果为:
+-- Do you have any Limburger ?
+-- I'm sorry, we're all out of Limburger
+It's very runny, sir.
+It's really very, VERY runny, sir.
+----------------------------------------
+client : John Cleese
+shopkeeper : Michael Palin
+sketch : Cheese Shop Sketch
+在上面的例子中需要注意的是,在输出之前对字典中的关键字进行了排序,如果不排序的话,输出的结果可能不是client,shopkeeper,sketch这个顺序.
+
+4.7.3.任意参数列表
+定义函数时,使用最少的一种形式就是通过使用*name可以在调用时有无数个参数值.这些参数(前面已经说过'这些参数不包括函数定义时显示定义的位置参数')会被放进一个数组,并且我们能引用这个数组.在*name之前可以有0个或多个普通的形参:
+def write_multiple_items(file, separator, *args):
+    file.write(separator.join(args))
+像*name和**name这种可变的参数一般情况下都位于函数定义的最后,因为它们接收的是除显示定义的参数外剩下的那部分.一些出现在*args参数后面的形参只能是关键字参数,这意味着*args后面的参数只能是关键字参数而不能是位置参数.
+>>> def concat(*args, sep="/"):
+...	return sep.join(args)
+...
+>>> concat("earth", "mars", "venus")
+'earth/mars/venus'
+>>> concat("earth", "mars", "venus", sep=".")
+'earth.mars.venus'
+注意上面这个例子sep.join(args)表示的是用sep去连接args中的参数,所以既然是连接,输出的结果应该是args sep args sep args...
+4.7.4 解包参数列表
+在调用函数时,有时向函数中传递的参数被放在列表或元组中,这样就涉及到了对列表或元组的解包,解包为单独的位置参数.例如,内建函数range(),如果调用它的话要向它传递两个单独的参数一个起始参数,一个结束参数(这只是一种情况,range()也接受一个参数的).如果调用函数时所要传递的参数不是单独有效的,而是存在列表或元组中，这时就要用*操作符来对列表或元组进行解包:
+>>> list(range(3, 6))
+>>> #前面也讲过了range()返回的其实是一个对象,迭代器可以从该对象取出条目,直到条目被取尽,list就是一个迭代器另一个迭代器是for循环
+[3, 4, 5]
+>>> args = [3, 6]
+>>> list(range(*args))
+[3, 4, 5]
+同样要给被引用的函数做关键字传递,但相应的键值对在字典中存着呢,则可以用**操作符对字典进行解包:
+>>> def parrot(voltage, state='a stiff', action='voom'):
+...	print("-- This parrot wouldn't"， action, end=' ')
+...	print("if you put", voltage, "volts through it.", end=' ')
+...	print("E's", state, "!")
+...
+>>> d = {"voltage":"four million","state":"bleedin' demised","action":"VOOM"}
+>>> parrot(**d)
+-- This parrot wouldn't VOOM if you put four million volts through it. E's bleedin' demised !
+总结:对于解包呀,咱们细细的想一下,对于函数a(x,y,*name)来说,我要引用的时候写的是a(1,2,3,4,5,6),此时会将除函数定义时显示给定的参数外的值,在这里就是3,4,5,6放到一个数组中并赋给name,即此时name=(3,4,5,6).所以我要反向引用的时候,在元组或列表前加上*就相当于将里面的元素都释放出来了.**name也是一样的,开始我是将所有的键值对都存到name里了,然后在name前面加上**就可以将这些键值对放出来.
+
+4.7.5 Lambda Expressions
+可以用lambda关键字来创建一个小的匿名函数.这个函数返回两个参数的和:lambda a, b:
+a+b.
+lambda函数可以应用在任何需要函数对象的地方,严格限制在一个lambda函数中只允许有一个表达式.就像一个内嵌的函数定义,并且lambda函数可以从包含它的函数中引用变量:
+    >>> def make_incrementor(n):
+    ...	return lambda x: x + n
+    ...	
+    >>> f = make_incrementor(42)
+    >>> f(0)
+    42
+    >>> f(1)
+    43
+上面这个例子利用lambda表达式返回了一个函数.lambda函数的另一个用法是将一个小的函数作为被传递的参数:
+http://www.dotnetperls.com/lambda-python这个里面的例子都明白了,简单来说就是lambda它就是定义一个函数它后面紧跟着的相当于普通函数中的形参,冒号后面的相当于函数体的表达式,比如
+lambda x: x + 1可以解释成:
+def non(x)
+    x+1
+当然就是一个意思,所以以后再理解lamba的时候,就找准哪个是形参,哪个是函数体中的表达式,是否有别名,应该就不会糊涂了.
+
+4.7.6.文档字符串
+这里有一些对于内容及文档字符串格式的约定。
+第一行应该总是对该对象的功能做一个比较简练的总结.不应该明确的陈述该对象的类型呀.这行应该以一个大写字母开头,并以句点结尾.
+如果文档字符串跨越多行,则第二行应该是空白的,这个空格起到后面的描述与第一行的概述明确区分的作用.下面的内容应该分成一段或多段来描述对象的调用约定、负作用等等.
+python解析器不会将多行文本字符串的缩进删掉.第一行文档字符串后面的第一个非空行决定了整个文档字符串的缩进数量.先简单翻译到这吧,以后还得译没译完,看例子:
+>>> def my_function():
+...	'''Do nothing, but document it.
+...	
+...	No, really, it doesn't do anything.
+...	'''
+...
+...	pass
+...
+>>> print(my_function.__doc__)
+Do nothing, but document it.
+
+    No, really, it doesn't do anything.
+
+4.7.7.函数注释
+函数的注释是可选的.
+函数的注释简单来说就是,等将函数给拆成两部分,一部分是函数的参数部分的注释,一部分是整个函数返回值的注释;函数参数的注释是直接在参数后面加上冒号再跟上注释内容,对函数返回值的注释是在函数参数括号外到冒号之间,注释方法为 ->注释 ,  如f() -> '我是注释',看例子吧：
+>>> def f(ham: str, eggs: str = 'eggs') -> str:
+...	print("Annotations:", f.__annotations__)
+...	print("Arguments", ham, eggs)
+...	return ham + ' and ' + eggs
+...
+>>> f('spam')
+Annotations: {'ham': <class 'str'>, 'return': <class 'str'>, 'eggs': <class 'str'>}
+Arguments: spam eggs
+'spam and eggs'
+4.8.编码风格
+以后你会写更长更复杂的python块,现在是讨论编码风格的好时机.大多数的语言都可以用不同的风格书写代码;有些语言的代码风格相对其它语言可读性更高.让别人阅读你代码的时候更简单这是一个不错的主意,所以我们在编码的时候要采取一种好的编码风格.
+对于Python来说,PEP8中讲的风格现在大多数的项目都是遵循的;用它讲的风格编码更可读,看着更舒服.每一个Python开发者都应该看一看;下面给你提取最重要的几点:
+    1.使用4个空格作为缩进深度,不要使用tabs.
+	4个空格是对大缩进和小缩进的一个折中(大缩进代码可读性好一些,小缩进可以有更深层的嵌套).不建议用tabs,有些时候会引起混淆所以最好不用
+    2.使用换行控制每行不要超过79个字符
+	好处是如果你显示器比较小的话不至于去动滚轮,一屏就能看完,对于大显示器的话,既使有好几个文件并排着也比较清晰
+    3.函数与类之间使用空行分隔开,函数中较大的代码块要使用空行分隔开(后一句应该是在函数中较大的代码块中使用空行,还是在函数中较大的代码块之间使用空行?)
+    4.如果可能的话,最好将行注释放在要注释行的后面     (这样直观一些,在哪行后面的注释就是对哪行的说明)
+    5.使用文档字符串 (就是将你写的函数是干嘛的,先在这里做一个简要的说明,让别人看完你的文档字符串后对你的模块的作用就已经知道的八九不离十了)
+    6.在操作符的前后及逗号后面都敲上空格，但是括号内就不用了(后一句的原文: but not directly inside bracketing constructs,不知道这句翻译的对否)
+    7.不要忘了给你的类和函数命名;原则上是用CamelCase为类命名,用lower_case_with_underscores为函数和方法命名.总是用self作为函数的第一个参数名(可以参看A First Look at Classes)
+    8.如果你的代码要用在国际化的环境中,最好不要使用特别奇特的编码.Python默认的编码是UTF-8或者是比较简单的ASCII码在很多时候也工作的很好
+    9.同样,如果只有少数情况下是说不同语言的人在阅读和维护代码的话,不要用ASCII码以外的字符来做标识符
+注脚:
+实际上,通过对象引用来调用是一个比较好的描述,因为如果一个可变对象被传递,调用者就可以看到被调用者对它做的任何改变(如向列表中插入条目)    #这句话云里雾里

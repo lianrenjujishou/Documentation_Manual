@@ -1,0 +1,8 @@
+玩机总结:
+1.软件名称: GNUroot~debian
+2.安装的软件: mysql5.7.18   python3.5   pip3(pymysql,openpyxl)   axel
+3.遇到的问题:
+   a.系统文件释放完成后面临的第一个问题就是软件源,我用的是官网的源，但是虽然我用的是jessie，但是源我将jessie,stretch,sid都给加上了(deb http://ftp2.cn.   /debian/ jessie/stretch/sid main non-free contrib),然后apt-get update更新源列表，但是我没那upgrade怕出问题
+   b.源更新完后先装了mysql，之前光用jessie源时装的是mysql5.5,这次将三个版本的源都用上了直接装的是mysql5.7,装的过程可能各种原因停止了，可以按上键重新再装
+   c.安装python3-pip,这样的话连python3.5和pip3都装上了，如果只装python3的话一般pip3是没有的，但是此时装的是pip1.几的版本非常老而且一些软件还装不上，所以就上pip官方把get-pip.py的脚下下来，然后将里面的版本检测那行代码直接让它赋值成3，再执行脚本会自动卸载旧的装新的，新的装好后直接安装pymysql就安装成功了
+   d.pymysql用新的pip完装成功后我又装了openpyxl，但是出错了，看报错是权限问题，弄了半天没弄好，突然想到了一个比较特殊的地方，就是\tmp，这里一般放临时文件，权限可能会大一些，所以就从pypi上将tar.gz版的下下来放到\tmp下，然后解压，执行python3 setup.py install就安装成功了，之前是将tar.gz解压到根目录中的一个子目录，当出错时，我ls -l一下，再和在\tmp解压的文件中的ls -l相比较，就可看出，是少了x权限   

@@ -1,0 +1,45 @@
+# This is the default ansible 'hosts' file.这是默认的ansible的hosts文件
+#
+# It should live in /etc/ansible/hosts    下面的约束在/etc/ansible/hosts里有效
+#
+#   - Comments begin with the '#' character 注释以#开头
+#   - Blank lines are ignored	空格被忽略
+#   - Groups of hosts are delimited by [header] elements 各主机组之间由[header]分隔
+#   - You can enter hostnames or ip addresses  你可以输入主机名或是ip地址
+#   - A hostname/ip can be a member of multiple groups  一个主机名/一个ip地址可以是多个组的成员
+
+# Ex 1: Ungrouped hosts, specify before any group headers.例子 1:未分组的主机,应该被指定在任何[header]之前
+
+#green.example.com   域名
+#blue.example.com    域名
+#192.168.100.1	     ip地址
+#192.168.100.10      ip地址
+
+# Ex 2: A collection of hosts belonging to the 'webservers' group   例子 2:下面定义了一个属于'webservers'组的集合
+
+#[webservers]   []表明下面的是一个组,这个组的名字叫webserver
+#alpha.example.org   域名
+#beta.example.org    域名
+#192.168.1.100       ip地址
+#192.168.1.110	     ip地址
+
+# If you have multiple hosts following a pattern you can specify  如果你有多个拥有固定模式的主机,你可以像下面这样指定它们:
+# them like this:
+
+#www[001:006].example.com   表示www001.example.com,www002.example.com,...,www006.example.com;这里用到的[]通配符和其它的正则的作用类似只是表示范围的时候它用的':'其它的正则基本用'-',如[001-006]
+
+# Ex 3: A collection of database servers in the 'dbservers' group  例子
+# 3:定义了含有一组数据库服务器名为dbserver的组
+
+#[dbservers]    []表示它下面的内容是属于一个组的,这个组名叫dbservers
+#
+#db01.intranet.mydomain.net  域名
+#db02.intranet.mydomain.net  域名
+#10.25.1.56  ip地址
+#10.25.1.57  ip地址
+
+# Here's another example of host ranges, this time there are no 这有另外一个表示一个范围的主机的例子,这次没有前置0(相对于上面的[001:006]来说)
+# leading 0s:
+
+#db-[99:101]-node.example.com     表示db-99-node.example.com,db-100-node.example.com,db-101-node.example.com
+

@@ -1,0 +1,39 @@
+1.Index
+================
+Jenkins Documentation
+
+Jenkins is a self-contained, open source automation server which can be used to automate all sorts of tasks such as building, testing, and deploying software. Jenkins can be installed through native system packages, Docker, or even run standalone by any machine with the Java Runtime Environment installed.
+:: Jenkins是一个独立的(自主的?),开源的自动化服务器,它可以被用来将所有种类的任务自动化，例如软件的建立,测试,布署.  Jenkins可以通过本地系统包来进行安装,安装到Docker上，甚至可以运行在任何装有Java Runtime环境的独立的机器上
+
+Guided Tour
+
+This guided tour will use the "standalone" Jenkins distribution which requires a minimum of Java 7, through Java 8 is recommended. A system with more than 512MB of RAM is also recommended.
+::该引导教程将会使用Jenkins独立版本，该版本对机器的需求为最低是Java 7到8，推荐用Java 8(这一句可能只翻译为推荐的Java版本为7到8,而非将推荐8另拉出来).系统的内存推荐不小于512MB.
+
+    1. Download Jenkins.
+    2. Open up a terminal in the download directory and run java -jar jenkins.war
+    3. Browse to http://localhost:8000 and follow te instructions to complete the installation.
+    4. Many Pipline examples require an installed Docker on the same computer as Jenkins
+ :: 1.下载Jenkins.
+    2.在1中下载的Jenkins所在目录打开一个终端然后运行"java -jar jenkins.war"(在jenkins文件所在目录下打开terminal其实目的是为了强调终端当前的路径为Jenkins文件所在的目录,完全可以在别的地方打开终端然后再切到jenkins的目录下,引出了相对路径与绝对路径)   
+    3.在浏览器中输入"http://localhost:8000"然后跟着网页上的指令完成安装
+    4.许多的Pipline例子还需要在装有Jenkins的机器上再装一个Docker
+
+When the installation is complete, start putting Jenkins to work and create a Pipline.
+:: 当安装完成后，开始让Jenkins工作然后创建一个Pipline
+
+Jenkins Pipline is a suit of plugins which supports implementing and integrating continous delivery piplines into Jenkins.
+PipLine provides an extensible set of tools for modeling simple-to-complex delivery piplines "as code".
+:: Jenkins Pipline是一套插件，这套插件支持执行和整合持续交付piplines到Jenkins中
+:: PipLine提供了一套可扩展的工具用于对从简单到复杂的交付pipline进行建模(这里的"as code"暂时理解为建模后应该会生成一些代码)
+
+A jenkinsfile is a text file that contains the definition of a Jenkins Pipline and is checked into source control. This is the foundation of "Pipline-as-Code"; treating the continuous delivery pipline a part of the application to be version and reviewed like any other code. Creating a Jenkinsfile provides a number of immediate benefits:
+:: jenkinsfile是一个文本文件,该文本文件包含了Jenkins Pipline的定义并且被checked into源码控制.这是"Pipline-as-Code"的基础;将持续交付pipline作为应用程序版本的一部分并且可以像其它代码一样进行代码回顾(代码审查).创建一个Jenkinsfile会提供大量直接的好处:
+
+    1. Automatically create Piplines for all Branches and Pull Requests
+    2. Code review/iteration on the Pipeline
+    3. Audit trail for the Pipline
+    4. Single source of truth for the Pipline, which can be viewed and edited by multiple members of the project.
+
+While the syntax for defining a Pipline, either in the web UI or with a Jenkinsfile, is the same, it's generally consided best practice to define the Pipline in a Jenkinsfile and check that in to source control.
+

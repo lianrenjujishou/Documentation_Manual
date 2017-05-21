@@ -1,0 +1,13 @@
+nginx的安装
+	http://nginx.org/en/linux_packages.html通过这个页面首先可以知道nginx可以安装在哪个Linux的哪个版本上
+	centos上的安装步骤:1.添加一个yum源(系统自带的源里没有nginx):centos的yum源文件不是一个且都位于/etc/yum.rpos.d/目录下,在该目录下新建一个名为nginx.repo文件,
+	文件内容是
+				[nginx]
+				name=nginx repo
+				baseurl=http://nginx.org/packages/OS/OSRELEASE/$basearch/
+				gpgcheck=0
+				enabled=1
+	第二行的网址有两个参数是需要改的OS系统的意思,咱们是centos这里就用centos替换,如果是红帽就用rhel替换,OSRELEASE是系统发行版本的意思这里只写大版本号,即5.x,6.x,7.x只
+	写5,6,7即可,所以我在centos6.5下安装系统第二行的完整写法就是baseurl=http://nginx.org/packages/centos/6/$basearch/
+	添加完nginx.repo这个安装源后执行yum install nginx安装即可
+	*.对于nginx的/etc/nginx/nginx.conf配置文件详解在单独的文件中

@@ -1,0 +1,21 @@
+mysql的安装:
+	这里要涉及到好多问题，1.如何全新安装，及全新安装是否可选版本；2.如果系统中已存在旧版本如何升级；3.接2升级后2中的保留文件是否适用于新版本，如共享客户端库；
+	4.能否新版本降到旧版本；5.升级或降级时数据库的备份与恢复；6.其它注意事项；
+	安装Mysql参照的网址:http://dev.mysql.com/doc/mysql-yum-repo-quick-guide/en/      该网址是rhl和centos,fedora系统使用的,因为这里面的软件管理用的是yum
+	虽然说用yum install mysql也可以安装,但是可能默认的源里的版本不是我们想要的,所以我们采用官方提供的yum源来自定义版本,目前支持5.5/6/7
+	说明:下面的安装步骤是在centos系统里没有任何的mysql数据库软件的情况下,全新安装
+	步骤一(添加mysql的yum源):打开http://dev.mysql.com/downloads/repo/yum/ 拉到下面找到适合你当前centos版本的rpm包,并下载,提供的下载列表里面没有说明centos,但是有rhl,
+	因为centos和fedora与rhl都是同宗的,所以我们找对应的rhl版本的包下载即可,因为我现在用的是centos6.5所以我下载相应rhl6的包即可(下载方法:点击右边的'Download'按钮,此时不会下
+	载而是弹出另一个网页,在新弹网页中下部有一行蓝色的'No thanks,just start mydownload'链接,在这个链接上右击,点击复制地址,然后用wget命令下载即可)
+	步骤二(利用rpm命令安装源):将相应的mysql的yum源安装包下载好后,cd到相应的路径下执行'[sudo] rpm -Uvh 包名.rpm'命令进行安装
+	步骤三(查看当前的mysql版本):安装完相应的源后,其实mysql5.5/6/7的版本我们就都能装了,此时我们要选择具体要装哪一个,一般情况下默认的是最新的,也就是说你安装完源后什么也不动
+	直接yum进行安装,所得到的版本是5.7.首先我们查看当前选择的是哪个版本,用yum repolist all | grep mysql,我们应该看到的是5.7相关条目后面是enabled,其它项后面都是disabled,
+	我们可以切换到/etc/yum.repo.d目录下,执行vim mysql-community.repo,比如我们想要安装mysql5.6,此时找到[mysql56-community]块下将enabled的值改为1,同样也需要将[mysql57-community]
+	块下的enabled值置为0,如果只改了5.6,不管5.7就重复了,系统就不认了.之后再yum repolist all | grep mysql,会看到5.6后面是enabled,而5.7因为已将配置文件中的值那为0,此时已为disabled.
+	步骤四(安装):此时前置条件都已经准备好了,可以进行安装了,执行 '[sudo] yum install mysql-community-server',此时相应版本的Mysql服务器就已安装好了.
+	步骤五(启动):目前我知道的启动服务的方法有两种,一种是/etc/init.d/服务名 start   另一种是:service mysqld start    查看状态及停止同理
+	步骤六(找到及修改root密码):系统安装时会自动建立一个root账户,也会随机生成root相应的密码,这个密码默认是在/var/log/mysqld.log中,我们输入'grep 'temporary password' /var/log/mysqld.log',
+	相应的密码就在搜出来的文本最后(位于root@location:后面),该密码是由大小写字母数字符号组合而成;找到root账户的密码后我们就可以用root账户登录了,在命令行下输入'mysql -uroot -p',回车后
+	会提示你输入密码,我们将刚才搜到的密码输入然后回车即可进入(此处有个窍门,就是在putty下左键拖拽选中,松开左键后实际上就已经复制上了,右击相当于粘贴.所以我们先左键选中密码,然后再右击,回车).
+	进入到mysql服务器之后,首先就是改一下root密码,否则默认的太难记了,一点规律都没有,输入"alter user 'root'@'localhost' identified by '大写小写数字符号组成的密码'".
+	步骤七(结可):到此一个mysql服务器的全新安装过程结束,至于开头提到的其它问题像升级安装等以后再写

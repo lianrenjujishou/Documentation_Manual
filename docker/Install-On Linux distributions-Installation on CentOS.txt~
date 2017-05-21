@@ -1,0 +1,145 @@
+CentOS
+Docker运行在CentOS 7.X.安装在像Scientific Linux(重新编译的Red Hat Enterprise
+Linux)这样的和EL7二进制相兼容的发布版上应该也会成功,但是Docker不会去在测试这些版本或者是支持将Docker安装到这些版本上.
+
+该页指示你使用Docker-managed release packages来安装并且告诉你安装机制.使用这些包可以确保你得到的是最新的Docker发行版本.如果你希望使用CentOS-managed packages来进行安装,可以参考你的CentOS文档.
+
+Prerequistites(先决条件)
+Docker需要安装在64位的CentOS上,而不用管具体是CentOS的哪个版本(5,6,7,or...).并且CentOS7运行的kernel(内核)版本必须至少是3.10.
+
+为了检查你当前的kernel版本,打开一个terminal(终端)并且使用uname
+-r来显示你的kernel版本:
+
+$ uname -r
+3.10.0-229.e17.x86_64
+
+最后,最好在安装前先将系统完整的更新一下.请记住你的系统应该对所有已经发现的bugs打好了补丁.任何已经被报道的kernel bugs可能已经在最新版的kernel包中被修复了.
+
+Install
+有两种方法可以用来安装Docker
+Engine.你可以使用yum包管理器进行安装.或者使用curl从get.docker.com上下载.第二种方法运行了一个安装脚本,而这个脚本实际上也是通过yum包管理器进行安装的.
+
+Install with yum
+1.使用具有sudo或是root权限的用户登录到机器上.
+2.确保存你现有的yum包是最新的
+
+$ sudo yum update
+
+3.添加yum repo(俗称的yum源,repo其实是repository(仓库)的缩写,).
+
+$ sudo tee /etc/yum.repos.d/docker.repo <<-'EOF'
+[dockerrepo]
+name=Docker Repository
+baseurl=https://yum.dockerproject.org/repo/main/centos/7/
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.dockerproject.org/gpg
+EOF
+
+4.安装Docker包.
+
+$ sudo yum install docker-engine
+
+5.开启Docker daemon(守护进程)
+
+$ sudo service docker start
+
+6.通过在一个container上运行一个测试image来验证docker已经被正确的安装上.
+
+$ sudo docker run hello-world
+Unable to find image 'hello-world:latest' locally
+    latest: Pulling from hello-world
+    a8219747be10: Pull complete
+    91c95931e552: Already exists
+    hello-world:latest: The image you are pulling has been verified. Important: image verification is a tech preview feature and should not be relied on to provide security.
+    Digest: sha256:aa03e5d0d5553b4c3473e89c8619cf79df368babd1.7.1cf5daeb82aab55838d
+    Status: Downloaded newer image for hello-world:latest
+    Hello from Docker.
+    This message shows that your installation appears to be working correctly.
+    
+    To generate this message, Docker took the following steps:
+    1. The Docker client contacted the Docker daemon.
+    2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+        (Assuming it was not already locally available.)
+    3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+    4. The Docker daemon streamed that output to the Docker client, which sent it to your terminal.
+    
+    To try something more ambitious, you can run an Ubuntu container with:
+    $ docker run -it ubuntu bash
+    
+    For more examples and ideas, visit:
+    http://docs.docker.com/userguide/
+
+Install with the script
+1.用有sudo或是root权限的用户登录机器.
+
+2.确保你目前的yum包是最新的.
+
+$ sudo yum update
+
+3.运行Docker 安装脚本.
+
+$ curl -fsSL https://get.docker.com/ | sh
+
+这个脚本添加docker.repo仓库(源)并且安装Docker.
+
+$ sudo service docker start
+
+5.通过在一个container中运行一个测试image来验证docker被正确的安装.
+
+$ sudo docker run hello-world
+
+Create a docker group
+
+docker daemon绑定到一个Unix socket(套接字)而不是TCP port(端口).默认情况下Unix socket的拥有者是root,其它用户(在sudoers中的用户)可以通过sudo访问它.正是由于这个原因,docker damon一直是以root用户的身份来运行.
+
+为了避免当运行docker命令时必须要使用sudo,我们可以创建一个被称为docker的Unix组,然后将需要运行docker命令的用户给加进去.当docker daemon启动时,会从docker组来获取哪些用户有对Unix socket的读写权.
+
+Warning:docker组等价于root用户;关于docker组如何影响你系统的安全详情可看Docker Daemon Attack Surface(https://docs.docker.com/engine/security/security/#docker-daemon-attack-surface)
+
+通过下面的步骤来创建docker组并向该组添加用户:
+
+1.用有sudo权限的用户登录Centos.
+
+2.创建docker组.
+
+  sudo groupadd docker
+
+3.将用户添加到docker组
+
+  sudo usermod -aG docker your_username
+
+4.退出登录然后再重新登录.
+  这样做是为了确保你的用户正在用正确的权限运行.
+
+5.通过不加sudo运行docker来验证你的工作.
+
+$ docker run hello-world
+
+Start the docker daemon at boot
+为了确保在你启动系统时Docker也随机启动,可以这样做:
+
+$ sudo chkconfig docker on
+
+如果你需要添加一个HTTP代理,可以为Docker运行时间文件设置一个不同的目录或是分区,或是其它自定义,说读我们的Systemd文章来学习如何customize your Systemd Docker daemon options(https://docs.docker.com/engine/admin/systemd/).
+
+Uninstall
+你可以使用yum命令卸载Docker软件.
+
+1. 列出你所安装的包.
+
+$ yum list installed | grep docker
+yum list installed | grep docker
+docker-engine.x86_64  1.7.1-el7 @/docker-engine-1.7.1-1.el7.x86_64.rpm
+
+2. 移除包.
+$ sudo yum -y remove docker-engine.x86_64
+
+这条命令不会移除images,containers,volumes或是你主机上用户自定义的配置文件.
+
+3. 为了删除images,containers,和volums,可以运行下面这条命令:
+
+$ rm -rf /var/lib/docker
+
+4.定位并且删除任何用户自定义的文件.

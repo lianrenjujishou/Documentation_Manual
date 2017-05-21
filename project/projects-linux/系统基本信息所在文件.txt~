@@ -1,0 +1,6 @@
+cpu基本信息:/proc/cpuinfo   lscpu 
+主机名:hostname/uname
+-n/;主机名所在文件:/etc/sysconfig/network(改完主机名不要忘了改掉/etc/hosts文件中的主机名)/hostname也可以修改主机名等
+
+
+

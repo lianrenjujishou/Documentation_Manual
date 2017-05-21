@@ -1,0 +1,147 @@
+21.17.smtp--SMTP协议客户端
+
+Source code:Lib/smtplib.py
+
+smtplib模块定义了一个SMTP客户端会话,该会话可以被用来发邮件到任何有SMTP或ESMTP后台监听程序的已连网机器上.关于SMTP和ESMTP的更详细内容可以查阅RFC
+821(简单的邮件传输协议)和RFC 1869(SMTP服务扩展)
+
+class smtplib.SMTP(host='',port=0,local_hostname=None,[timeout,]source_address=None)
+    一个SMTP实例就是一个封装的SMTP连接.它的方法支持完整的SMTP和ESMTP操作项目.如果可选的host和port参数被给出,则在初始化的过程中将会调用带有host和port参数的connect()方法.如果local_hostname被指定,则local_hostname在HELO/EHLO命令中被用作本地主机的FQDN.否则的话本地主机名可以能过使用socket.getfqdn()函数来找到.如果调用的connect()方法返回的是其它的东西而不是一个成功代码的话,一个SMTPConnectError的异常会被抛出.可选的timeout参数指定了一个以秒为单位的连接超时时间,如果超过这个时间就会blocking操作(这里的blocking我暂时译成中断吧),比如blocking连接尝试(如果没有指定，则使用默认的全局timeout设置).如果timeout过期了,会抛出socket.timeout异常.可选参数source_address参数允许绑定到某个指定的源地址在一台拥有多个网络接口的机器上,和/或绑定到某个特定的源TCP端口.在连接前,会将含有两个元素的元组(host,port)绑定到套接字,作为源地址.如果被忽略(或者如果主机或端口分别是'' 和/或 是0)OS默认的行为将被使用.
+
+    最普通的用法是,你仅需要初始化/连接,sendmail()方法,quit()方法.下面有举例.
+    
+    SMTP类支持with语句.当使用它的时候,QUIT指令在with语句退出时自动下达.例如:
+    --------------------------------
+    >>> from smtplib import SMTP
+    >>> with SMTP("domain.org") as smtp:
+    ...    smtp.noop()
+    ...    
+    (250, b'ok')
+    >>>
+    --------------------------------
+    在3.3版本中改变的:with语句的支持被添加
+    在3.3版本中改变的:source_address参数被添加
+    3.5版本中新添加的:SMTPUTF8扩展(RFC 6531)现在被支持了
+
+class smtplib.SMTP_SSL(host='',port=0,local_hostname=None,keyfile=None,certfile=None,[timeout,]context=None,source_address=None)
+    一个SMTP_SSL实例的表现和SMTP的实例表现一样.SMTP_SSL应该被用于在连接开始的时候就需要SSL和使用starttls()方法不合适的情况下.如果host参数没有被指定下,则使用本地主机名.如果port参数是0,则使用标准的SMTP-over-SSL端口(465).可选参数local_hostname,timeout和source_address的情况可以参考上面的SMTP类.context参数也是可选的,可以包含一个SSLContext并且物许配置安全连接的多个方面.请阅读Security considerations来获得最优方法.
+
+    参数keyfile和参数certfile对于context参数来说是一个legacy alternative(暂译为遗留替代),可以指向一个被格式化的PEM的私有秘钥和证书链SSL链接文件.(翻译不准)
+    
+    在3.3版本中改变的:context参数被添加
+    在3.3版本中改变的:source_address参数被添加
+    在3.4版本中改变的:类现在支持用ssl.SSLContext.check_hostname对主机名进行检查还支持服务名指示(可以看ssl.HAS_SNI)
+    
+class smtplib.LMTP(host='',port=LMTP_PORT,local_hostname=None,source_address=None)
+    LMTP协议和ESMTP协议非常相似,都是严重地基于标准的SMTP客户端.通常LMTP协议使用的是Unix套接字,因此我们的connect()方法一定支持,并且connect()方法还支持一个特殊的host:port服务器。可选参数local_hostname和source_address意义可以参考SMTP类.为了指定一个Unix套接字,你必须使用一个以/开始的绝对路径的host.
+
+    授权是被支持的,使用regular(普通的?有规律的?等)SMTP机制.当使用一个Unix套接字时,LMTP协议通常不支持也不需要任何的授权,但是你的mileage(好处?利润?)可能会改变.
+
+    同样异常的漂亮选择也被定义:
+    exception smtplib.SMTPException
+        这个模块提供的OSError的子类,其中OSError是所有其它异常的基本异常类
+        在3.4版本中变化的:SMTPException变成了OSError的子类
+
+    exception smtplib.SMTPServerDisconnected
+        异常部分先略过
+
+21.17.1. SMTP Objects
+
+一个SMTP实例有下列的方法:
+SMTP.set_debuglevel(level)
+    设置调试输出级别.值1或者是True for level results in debug 连接信息和跟服务器来往的信息.level为2则会将这些信息加上时间戳
+    在3.5版本中变化的:添加了调试级别2
+
+SMTP.docmd(cmd, args='')
+    发送一个命令cmd(这个cmd是方法中的参数,并不是说发送的命令叫cmd)到服务器.可选参数args被简单的连接到命令,多个args用空格隔开.
+    
+    这个方法返回由一个数值形式的响应代码和实际的响应行(如果是多行响应则连接为一个长行)组成的两个元素的元组.
+    
+    一般操作中明确的调用这个方法不是必须的.这个方法被用来实现其它方法并且这个方法对于测试私有扩展是有用的.
+
+    如果当等待回付的时候,到服务器的连接丢失了,则会抛出SMTPServerDisconnected异常
+
+SMTP.connect(host='localhost', port=0)
+    连接到一个指定端口的主机上.默认情况下是连接到本地主机的25号端口(标准的SMTP端口).如果主机名以冒号跟着一个数字结尾,那个后缀将会被剥去并且这个数字被解释成端口号使用.如果在实例化期间如果一个主机被指定,则构造器会自动调用这个方法.返回一个两个元素的元素,这两个元素分别是响应代码和服务器发送的信息.
+
+SMTP.helo(name='')
+    使用HELO识别你自己到SMTP服务器(这句翻译的不准).默认的主机名参数是本地主机的fqdn(完全合格域名,或全称域名).服务器返回的消息被作为对象的helo_resp属性存储. 
+
+    一般的操作中明确的调用SMTP.helo()方法不是必须的.当需要的时候SMTP.helo()方法会被sendmail()方法明确调用.
+SMTP.ehlo(name='')
+    使用EHLO识别你自己到一个ESMTP服务器.主机名参数默认是本地主机的fqdn.检查ESMTP选项的响应并且将这些响应存储起来供has_extn()方法使用.也设置几个informational属性:服务器返回的消息被作为ehlo_resp属性存储,
+does_esmtp被设置为true或false依赖于是否服务器支持ESMTP,并且esmtp_features将会是一个字典,这个字典包含了服务所支持的SMTP服务扩展名还有相应的参数(如果有的话)
+
+    除非你希望在发送邮件之前使用has_extn()属性,否则明确的调用has_extn()方法不是必须的.当需要的时候可以通过sendmail()方法来明确的调用has_extn()方法
+
+SMTP.ehlo_or_helo_if_needed()
+    如果已经没有以前的EHLO或HELO控制这个会话了,这个方法调用ehlo()方法或是helo()方法.它会首先尝试ESMTP HELO.
+
+    SMTPHeloError
+        对于HELO的问候服务没有给出合适的回复
+
+SMTP.has_extn(name)
+    如果name参数在由服务器返回的SMTP服务扩展的集合中,则返回True,否则返回False.忽略大小写.
+
+SMTP.verify(address)
+    使用SMTP VRFY来检查在这台服务器上的地址的有效性.如果用户地址是有效的,返回一个由代码250和一个完全的RFC 822地址(包含人类的名字).否则返回一个400或者是更大的代码和一个错误字符串.
+
+    Note:多地址禁止SMTP VRFY为了阻止垃圾邮件制造者
+
+SMTP.login(user, password, *, initial_response_ok=True)
+    登录到一台需要认证的SMTP服务器.参数是认证需要的用户名和密码.如果已经没有前面的EHLO或HELO控制这个会话,则这个方法优先尝试ESMTP EHLO.如果认证成功这个方法会正常返回,否则会抛出下面的异常:
+    
+    SMTPHeloError
+	对于HELO的问候,服务器没有正确的回复
+
+    SMTPAuthenticationError
+	服务器不接受这个用户名/密码的组合(即平时说的用户名和或密码错误)
+
+    SMTPNoteSupportedError
+	AUTH命令不被服务器支持
+
+    SMTPException
+	没有合适的认证方法被发现
+    
+    被smtplib支持的每一种认证方法都会被轮流尝试,如果他们被服务器通知是支持的话.看auth()方法关于受支持的认证方法列表.initial_response_ok被传递到(is passed through to目前翻译为被传递到)auth()方法中
+
+    (翻译的啥也不叫啥)可选的关键字参数initial_response_ok,支持它的认证方法,按照RFC 4954中的说明无论指定哪一个"initial response"都可和AUTH命令一起被发送,而不是需要一个挑战/响应.
+
+    在3.5版本中改变的:SMTPNotSupportedError可以被抛出,并且initial_response_ok参数被添加
+
+SMTP.auth(mechanism, authobject, *, initial_response_ok=True)
+    为指定的认证mechanism发布一个SMTP AUTH命令,并且都过authobject处理challenge response(挑战响应).
+
+    mechanism指定了哪个认证机制被用作AUTH命令的参数;列在esmtp_features中的auth元素是有效值.
+
+    authobject必须是一个可以调用的带有一个可选参数的对象:
+	data = authobject(challenge=None)
+    
+    如果可选关键字参数initial_response_ok是true,则会优先调用不带参数的authobject()方法.它会返回RFC 4954中写的"被始化响应"字节,这些字节将被编码并且和AUTH命令一起发送,如下.如果authobject()方法不支持一个初始化的响应(例如,因为它需要一个challenge),当被以challenge=None的形式调用时,它应该返回None.如果initial_response_ok是false,然后authobject()对象将不会和None首先被调用.
+
+    如果初始化响应检查返回None,或者如果initial_response_ok是false，authobject()将会被调用来处理服务器的challenge响应;它传递的challenge参数将会是一个bytes.它应该返回被base64编码的bytes数据并且将这些数据发送到服务器.
+
+    SMTP类为CRAM-MD5,PLAIN和LOGIN机制提供了uthobjects;它们分别被命名为SMTP.auth_cram_md5,SMTP.auth_plain和SMTP.auth_login.这些都需要SMTP实例的user和password属性被设置为合适的值.
+
+    用户代码通常不需要直接调用auth,但是能够代替调用login()方法,login()方法(是指它吗?还是auth?)会按顺序轮流尝试上面提到的每一个机制.auth会暴露促进认证方法的实现还没有被smtplib模块直接支持.
+
+    3.5版提供的新方法
+
+SMTP.starttle(keyfile=None, certfile=None, context=None)
+SMTP.sendmail(from_addr, to_addrs, msg, mail_options=[], rcpt_options=[])
+SMTP.send_message(msg, from_addr=None, to_addrs=None, mail_options=[], rcpt_options=[])
+    对于调用sendmail()方法来发送由email.message.Message对象呈现的信息来说,这是一种非常方便的方法.该方法的参数和sendmail()的参数意思相同,除了msg参数是一个Message对象外.
+
+    如果参数from_addr是None或者参数to_addrs是None,send_message会按照RFC
+5322提供的说明从msg的头提取地址来填充这些参数:from_addr被设置到邮寄人区域,如果这个参数给出的话,其它的被设置到From区域.to_addresses参数结合了To的值,Cc的值和来自msg参数的Bcc区域的值.如果一个Resent_*头部精确的出现在了信息中,则普通的头部被忽略用Resent_*来作为新头部.如果信息中包含多个Resent_*头部集合,则会抛出一个ValueError异常,因为没有方法来明白地检测哪一组是最新的Resent-*头.
+
+    send_message使用BytesGenerator来序列化msg并且用\r\n作为行的结尾,并且使用sendmail()方法来传送被BytesGenerator处理之后的信息.不管from_addr和to_addr的值,send_message不发送任何可能出现在msg中的Bcc或者Resent-Bcc头.如果from_addr和to_addrs中的任何地址含有非ASCII字符并且服务器没有通知SMTPUTF8支持,则会抛出SMTPNotSupported异常.否则Message被序列化用它被设置为True的utf8属性的策略的一个克隆,并且SMTPUTF8和BODY=8BITMIME被添加到mail_options中.
+
+    该方法在3.2版中新加的
+
+    在3.5版本中光加了国际化地址(SMTPUTF8)的支持
+
+SMTP.quit()
+    结束SMTP会话并关闭连接.返回SMTP QUIT命令的结果.
+
+低级别的方法对应于标准的SMTP/ESMTP的HELP,REST,NOOP,MAIL,RCPT命令,并且DATA也被支持.通常这些不需要直接被调用,因此他们没有被记录在这里.想要更详细的了解它们,可以参看模块代码.

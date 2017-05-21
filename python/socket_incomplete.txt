@@ -1,0 +1,26 @@
+18.1. socket -- Low-level networking interface(低级别网络接口)
+
+Source code: Lib/socket.py
+--------------------------------------------------------------------------
+This module provides access to the BSD socket interface. It is available on all modern Unix systems, Windows, MacOS, and probably addtional platforms.
+socket模块提供了对BSD socket接口的访问.该模块对于现代所有的Unix系统,Windows,MacOS和其它那些额外的平台都是有效的.
+
+Note: Some behavior may be platform dependent, since calls are made to the operating system socket APIs.
+<>注意：一些行为可能是依赖具体的平台，since calls are made to the operating system socket APIs.
+
+The Python interface is a straightforward transliteration of the Unix system call and library interface for sockets to Python's object-oriented style: the socket() function returns a socket object whose methods implement the various socket system calls. Parameter types are somewhat higher-level than in the C interface: as with read() and write() operations on Python files, buffer allocation on receive operations is automatic, and buffer length is implicit on send operations.
+对于Python的面向对象类型中的sockets来说,Python接口是一个对Unix系统调用和库接口的一个简单直译: socket()函数返回一个socket对象,socket对象的方法实现了多种socket系统调用.参数类型比在C接口中的更高级一点:拿Python文件的read()和write()操作来说,在receive操作上的缓存器分配是自动的,并且在send操作上缓存器的长度是隐式的.
+
+See also:
+Module socketserver
+    Classes that simplify writing network servers.
+Module ssl
+    A TLS/SSL wrapper for socket object.
+
+18.1.1. Socket families
+
+Depending on the system and the build options, various socket families are supported by this module.
+依赖于系统和编译选项，各种各样的socket家族被socket模块支持
+
+The address format required by a particular socket object is automatically selected based on the address family specified when the socket object was created. Socket addresses are represented as follows:
+被一个特殊的socket对象需要的地址格式会被自动的选择，选择时是基于当socket对象被创建时指定的地址家族.Socket地址被表示如下:

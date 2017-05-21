@@ -1,0 +1,610 @@
+*usr_05.txt*    For Vim version 8.0. Last change: 2016 Mar 28
+VIM USER MANUAL - by Bram Mooleanaar
+Set your settings
+
+Vim can be tuned to work like you want it to. This chapter shows you how to make Vim start with options set to different values. Add plugins to extend Vim's capabilities. Or define your own macros.
+
+|05.1| The vimrc file
+|05.2| The example vimrc file explained
+|05.3| Simple mappings
+|05.4| Adding a package
+|05.5| Adding a plugin
+|05.6| Adding a help file
+|05.7| The option window
+|05.8| Often used options
+
+Next chapter: |usr_06.txt| Using syntax highlighting
+Previous chapter: |usr_04.txt| Making small changes
+Table of contents: |usr_toc.txt|
+
+============================================================
+*05.1* The vimrc file                            *vimrc-intro*
+
+You probably got tired of typing commands that you use very often. To start Vim with all your favorite option settings and mappings, you write them in what is called the vimrc file. Vim executes the commands in this file when it starts up.
+
+If you already have a vimrc file (e.g., when your sysadmin has one setp for you), you can edit it this way: >
+
+:edit $MYVIMRC
+
+If you don't have a vimrc file yet, see |vimrc| to find out where you can create a vimrc file. Also, the ":version" command mentions the name of the "user vimrc file" Vim looks for.
+
+For Unix and Macintosh this file is always used and is recommended:
+
+~/.vimrc ~
+
+For MS-DOS and MS-Windows you can use one of these:
+
+$HOME/_vimrc ~
+$VIM/_vimrc ~
+
+The vimrc file can contain all the commands that you type after a colon. The most ssimple ones are for setting options. For example, if ou want Vim to always start with the 'incsearch' option on, add this line your vimrc file: >
+
+set incsearch
+
+For this new line to take effect you need to exit Vim and start it again. Later you will learn how to do this without exiting Vim.
+
+This chapter only explains the most basic items. For more information on how to write a Vim script file: |usr_41.txt|.
+
+============================================================
+*05.2* The example vimrc file explained       *vimrc_example.vim*
+
+In the first chapter was explained how the example vimrc (included in the Vim distribution) file can be used to make Vim startup in not-compatible mode (see |not-coompatible|). The file can be found here:
+
+$VIMRUNTIME/vimrc_example.vim ~
+
+In this section we will explain the various commands used in this file. This will give you hints about ow to set up your own preferences. Not everything will be explained though. Use the ":help" command to find out more.
+
+>
+set nocompatible
+
+As mentioned in the first chapter, there manuals explain Vim working in an inproved way, thus not completely Vi compatible. Setting the 'compatible' option off, thus 'nocompatible' takes care of this. 
+
+>
+set backspace=indent,eol, start
+
+This specifies where in Insert mode the <BS> is allowed to delete the character in front of the cursor. The three items, separated by commas, tell Vim to delete the white space at the start of the line, a line break and the character before where Insert mode started.
+>
+
+set autoindent
+
+This makes Vim use the indent of the previous line for a newly created line. Thus there is the same amount of white space before the new line. For example when pressing <Enter> in Insert mode, and when using the "o" coommand to open a new line.
+>
+
+if has("vms")
+  set nobackup
+else
+  set backup
+endif
+
+This tells Vim to keep a backup copy of a file when overwriting it. But not on the VS system, since it keeps old versions of files already. The backup file will have the same name as the original file with "~" added. See |07.4|
+>
+
+set history=50
+
+Keep 50 commands and 50 search patterns in the history. Use another number if you want to remember fewer or more lines.
+>
+
+set ruler
+
+Always display the current cursor position in the lower right corner of the Vim window.
+
+>
+set showcmd
+
+Display an incomplete command in the lower right corner of the Vim window, left of the ruler. For exxample, when you type "2f", Vim is waiting for you to type the character to find and "2f" is displayed. When you press "w" next, the "2f" command is executed and the displayed "2f" is removed.
+
++----------------------------------------------------+
+|text in the Vim window                              |
+|~                                                   |
+|~                                                   |
+|-- VISUAL--                      2f    43,8   17%   |
++----------------------------------------------------+
+ ^^^^^^^^^^^^                   ^^^^^^  ^^^^^^^^^^^
+   'showmode'                  'showcmd'   'ruler'
+
+>
+set incsearch
+
+Display the match for a search pattern when halfway typing it.
+
+>
+map Q gq
+
+This defines a key mapping. More about that in the next section. This defines the "Q" command to do formatting with the "gq" operator. This is how it worked before Vim 5.0. Otherwise the "Q" command starts Ex mode, but you will not need it.
+
+>
+vnoremap _g y:exe "grep /" . escape(@", '\\/') . "/ *.c *.h"<CR>
+
+This mapping yanks the visually selected text and searches for it in C files. This is a complicated mapping. You can see that mappings can be used to do quite complicated things. Still, it is just a sequence of commands that are executed like you typed them.
+
+>
+if &t_Co > 2 || has("gui_running")
+  syntax on
+  set hlsearch
+endif
+
+This switches on syntax highlighting, but onnly if colors are available. And the 'hlsearch' option tells Vim to highlight matches with the last used search pattern. The "if" command is very useful to set options only when some condition is met. More about that in |usr_41.txt|
+                                                       *vimrc-filetype* >
+filetype plugin indent on
+
+This switches on threee very clever mechanisms:
+1. Filtype detection.
+   Whenever you start editing a file, Vim will try to figure out what kind of file this is . When you edit "main.c", Vim will see the ".c" extension and recognize this as a "c" filetype. When you edit a file that starts with "#//bin/sh", Vim will recognize it as a "sh" filetype.
+The filetype detection is used for syntax highlighting and the other two items below.
+See |filetypes|.
+
+2. Using filetype plugin files
+   Many different filetypes are edited with different options. For example, when you edit a "c" file, it's very useful to set the 'cindent' option to automatically indent the lines. These commonly useful option settings are included with Vim in filetype plugins. You can also add your own, see |write-filetyp-plugin|.
+
+3. Using indent files
+   When editing programs, the indent of a line can often be computed automatically. Vim comes with these indent rules for a number of filetypes. See |:filetype-indent-on| and 'indentexpr'
+
+>
+autocmd FileType text setlocal textwidth=78
+
+This makes Vim break text to avoid lines getting longer than 78 characters. But only for files that have been detected to be plain text. There are actually two parts here. "autocmd FileType text" is an autocommand. This defines that when the file type is set to "text" the following command is automatically executed. "setlocal textwidth=78" sets the 'textwidth' option to 78, but only locally in one flie.
+                             *restore-cursor* >
+
+autocmd BufReadPost *
+  \ if line("'\") > 1 && line("'\") <= line("$") |
+  \  exe "normal! g`\"" |
+  \ endif
+
+Another autocommand. This time it is used after reading any file. The complicated stuff after it checks if the '" mark is defined, and jumps to it if so. The backslash at the start of a line is used to continue the command from the previous line. That avoids a line getting very long. 
+See |line-continuation|. This only works in a Vim script file, not when typing commands at the command-line.
+
+============================================================
+*05.3* Simple mappings
+
+A mapping enables you to bind a set of Vim commands to a single key. Suppose, For example, that you need to surround certain words with curly braces. In other word, you need to change a word such as "amount" into "{amount}". With the :map command, you can tell Vim that the F5 key does this job. The command is as follows: >
+
+:map <F5> i{<Esc>ea}<Esc>
+<
+Note:
+{When} entering this command, you must enter <F5> by typing four character. Similarly, <Esc> is not entered by pressing the <Esc> key, but by typing five characters. Watch out for this difference when reading the manual!
+
+Let's break this down:
+<F5> The F5 function key. This is the trigger key that causes the command to be executed as the key is pressed.
+
+i{<ESC> Insert the { character. The <ESC> key ends Insert mode.
+
+e Move to the end of the word.
+
+a}<Esc> Append the } to the word.
+
+After you execute the ":map" command, all you have to do to put {} around a word is to put the cursor on the first character and press F5.
+
+In this example, the trigger is a single key; it can be any string. But when you use an existing Vim command, that command will no longer be available.
+You better avoidthat.
+One key that can be used with mappings is the backslash. Since you probably want to define more than one mapping, add another character. you could map "\p" to add parentheses around a word, and "\c" to add curly braces, for example:>
+
+:map \p i(<Esc>ea)<Esc>
+:map \c i{<Esc>ea}<Esc>
+
+You need to type the \ and the p quickly after another, so that Vim knows they belong together.
+
+The ":map" command (with no arguments) lists your current mappings. At least the ones for Normal mode. More about mappings in section |40.1|.
+
+============================================================
+*05.4*  Adding a package                 *add-package* *matchit-install*
+
+A package is a set of files that you can add to Vim. There are two kinds of packages: optional and automatically loaded on startup.
+
+The Vim distribution comes with a few packages that you can optionally use. For example, the matchit plugin. This plugin makes the "%" command jump to matching HTML tags, if /else/endif in Vim scripts, etc. Very useful, although it's not backwards compatible (that's why it is not enabled by default).
+
+To start using the matchit plugin add one line to your vimrc file: >
+packadd! matchit
+
+That's all! After restarting Vim you can find help about this plugin: >
+:help matchit
+
+That works, because when `:packadd` loaded the plugin it also added the package directory in 'runtimpath', so that the help file can be found.
+
+You can find packages on the Internet in various places It usually comes as an archive or as a repository. For an archive you can follow these steps:
+1. create the package directory: >
+  mkdir -p ~/.vim/pack/fancy
+  "fancy" can be any name of your liking. Use one that describes the package.
+2. unpack the archive in that directory. This assumes the top directory in the archive is "start":>
+  cd ~/.vim/pack/fancy
+  unzip /tmp/fancy.zip
+
+if the archive layout is different make sure that you end up with a path like this:
+  ~/.vim/pack/fancy/start/fancytext/plugin/fancy.vim ~
+Here "fancytext" is the name of the package, it can be anything else.
+
+More information about packages can be found here: |packages|
+
+============================================================
+*05.5* Adding a plugin                      *add-plugin* *plugin*
+
+Vim's functionality can be extended by adding plgins. A plugin is nothing more than a Vim script file that is loaded automatically when Vim starts. You can add a plugin very easily by dropping it in your plugin directory.
+{not available when Vim was compiled without the |+eval| feature}
+
+There are two types of plugins:
+
+ global plugin: Used for all kinds of files
+ filetype plugin: Only used for a specific type of file
+
+The global plugins will be discussed first, then the filetype ones |add-filetype-plugin|.
+
+Global PLUGINS                                  *standard-plugin*
+When you start Vim, it will automatically load a number of global plugins.
+You don't have to do anything for this. They add functionality that most people will want to use, but which was implemented as a Vim script instead of being ccompiled into Vim. you can find them listed in the help index |standard-plugin-list|. Also see |load-plugins|
+                                                          *add-global-plugin*  
+You can add a global plugin to add functionality that will always be present when you use Vim. There are only two steps for adding a global plugin:
+1. Get a copy of the plugin.
+2. Drop it in the right directory.
+
+GETTING A GLOBAL PLUGIN
+
+Where can you find plugin?
+- Some come with Vim. You can find them in the directory $VIMRUNTIME/macros and its sub-directories.
+- Download from the net. There is a large collection on http://www.vim.org.
+- They are sometimes posted in a Vim |maillist|.
+- You could write one yourself, see |write-plugin|.
+
+Some plugins come as a vimball archive, see |vimball|.
+Some plugins can be updated automatically, see |getscript|.
+
+USING A GLOBAL PLUGIN
+
+First read the text in the plugin itself to check for any special conditions.
+Then copy the file to your plugin directory:
+
+    system    plugin directory ~
+    Unix  ~/.vim/plugin/
+    PC and OS/2  $HOME/vimfiles/plugin or $VIM/vifiles/plugin
+    Amiga  s:vimfiles/plugin
+    Macintosh  $VIM:vimfiles:plugin
+    Mac OS X  ~/.vim/plugin/
+    RISC-OS  Choices:vimfiles.plugin
+
+Example for Unix (assuming you didn't have a plugin directory yet): >
+    mkdir ~/.vim
+    mkdir ~/.vim/plugin
+    cp /tmp/yourplugin.vim ~/.vim/plugin
+
+That's all! Now you can use the commands defined in this plugin.
+
+Instead of putting plugins directly into the plugin/ directory, you may better organize them by putting them into subdirectories under plugin/.
+As an example, consider using "~/.vim/plugin/perl/*.vim" for all your Perl plugins.
+
+FILETYPE PLUGINS                          *add-filetype-plugin* *ftplugins*
+
+The Vim distribution coms with a set of plugins for different filetypes that you can start using with this command: >
+
+:filetype plugin on
+
+That's all! See |vimrc-filetype|.
+
+If you are missing a plugin for a filetype you are using, or you found a better one, you can add it. There are two steps for adding a filetype plugin:
+1. Get a copy of the plugin.
+2. Drop it in the right directory.
+
+GETTING A FILETYPE PLUGIN
+
+You can find them in the same places as the global plugins. Watch out if the type of file is mentioned, then you know if the plugin is a global or a filetype one. The scripts in $VIMRUNTIME/macros are global ones, the filetype plugins are in $VIMRUNTIME/ftplugin.
+
+USING A FILETYPE PLUGIN                        *ftplugin-name*
+
+You can add a filetype plugin by dropping it in the right directory. The name of this directory is in the same directory mentioned above for global plugins, but the last part is "ftplugin". Suppose you have found a plugin for the "stuff" filetype, and you are on Unix. Then you can move this file to the ftplugin directory: >
+  mv thefile ~/.vim/ftplugin/stuff.vim
+
+If that file already exists you already have a plugin for "stuff". You might want to check if the existing plugin doesn't conflict with the one you are adding. If it's OK, you can give the new one another name: >
+  mv thefile ~/.vim/ftplugin/stuff_too.vim
+
+The underscore is used to separate the name of the filetype from the rest, 
+which can be anything. If you use "otherstuff.vim" it wouldn't work, it would be loaded for the "otherstuff" filetype.
+
+On MS-DOS you cannot use long filenames. You would run into trouble if you add a second plugin and the filetype has more than six characters. You can use an extra directory to get around this: >
+
+  mkdir $VIM/vimfiles/ftplugin/fortran
+  copy thefile $VIM/vimfiles/ftplugin/fortran/too.vim
+
+The generic names for the filetype plugins are: >
+  ftplugin/<filetype>.vim
+  ftplugin/<filetype>_<name>.vim
+  ftplugin/<filetype>/<name>.vim
+
+Here "<name>" can be any name that you prefer.
+Examples for the "stuff" filetype on Unix: >
+
+~/.vim/ftplugin/stuff.vim
+~/.vim/ftplugin/stuff_def.vim
+~/.vim/ftplugin/stuff/header.vim
+
+The <filetype> part is the name of the filetype the plugin is to be used for.
+Only files of this filetype will use the settings from the plugin. The <name> part of the plugin file doesn't matter, you can use it to have several plugins for the same filetype. Note that it must end in ".vim".
+
+Further reading:
+|filetype-plugins| Documentation for the filetype plugins and information about how to avoid that mappings cause problems
+|load-plugins| When the global plugins are loaded during startup.
+|ftplugin-overrule| Overruling the settings from a global plugin.
+|write-plugin| How to write a plugin script.
+|plugin-details| For more information about using plugins or when your plugin doesn't work.
+|new-filetype| How to detect a new file type.
+
+============================================================
+*05.6* Adding a help file           *add-local-help*
+
+If you are lucky, the plugin you installed also come with a help file. We will explain how to install the help file, so that you can easily find help for your new plugin.
+Let us use the "doit.vim" plugin as an exxample. This plugin comes with documentation: "doit.txt". Let's first copy the plugin to the right directory. This time we will do it from inside Vim. (You may skip some of the "mkdir" commands if you already have the directory.) >
+
+:!mkdir ~/.vim
+:!mkdir ~/.vim/plugin
+:!cp /tmp/doit.vim ~/.vim/plugin
+
+The "cp" command is for Unix, on MS-DOS you can use "copy".
+Now create a "doc" directory in one of the directories in 'runtimepath'. >
+
+:!mkdir ~/.vim/doc
+
+Copy the help file to the "doc" directory. >
+
+:!cp /tmp/doit.txt ~/.vim/doc
+
+Now comes the trick, which allows you to jump to the subjects in the new help file: Generate the local tags file with the |:helptags| command. >
+  :helptags ~/.vim/doc
+
+Now you can use the >
+ :help doit
+
+command to find help for "doit" in the help file you just added. You can see an entry for the local help file when you do: >
+  :help local_additions
+
+The title lines from the local help files are automagically added to this section. There you can see which local help files have been added and jump to them through the tag. 
+
+For writing a local help file, see |write-local-help|.
+
+============================================================
+*05.7*
+
+If you are looking for an option that does what you want, you can search in the help files here: |options|. Another way is by using this command: >
+    :options
+
+This opens a new window, with a list of options with a one-line explanation.
+The options are grouped by subject. Move the cursor to a subject and press <Enter> to jump there. Press <Enter> again to jump back. Or use CTRL-O.
+
+You can change the value of an option. For example, move to the "displaying text" subject. Then move the cursor down to this line:
+
+ set wrap            nowrap ~
+
+When you hit <Enter>, the line will change to:
+
+  set nowrap wrap ~
+
+The option has now been switched off.
+
+Just above this line is a short description of the 'wrap' option. Move the cursor one line up to place it in this line. Now hit <Enter> and you jump to the full help on the 'wrap' option.
+
+For options that take a number or string argument you can edit the value. 
+Then press <Enter> to apply the new value. For example, move the cursor a few lines up to this line:
+
+  set so=0 ~
+
+Position the cursor on the zero with "$". Change it into a five with "r5".
+Then press <Enter> to apply the new value. When you now move the cursor around you will notice that the text starts scrolling before you reach the border. This is what the 'scrolloff' option does, it specifies an offset from the window border where scrolling starts.
+============================================================
+*05.8* Often used options
+
+There are an awful lot of options. Most of them you will hardly ever use.
+Some of the more useful ones will be mentioned here. Don't forget you can find more help on these options with the ":helep" command, with single quotes before and after the option name. For example: 
+  :help 'wrap'
+
+In case you have messed up an option value, you can set it back to the default by putting an ampersand (&) after the option name. Example: >
+  :set iskeyword&
+
+NOT WRAPPING LINES
+
+
+Vim normally wraps long lines, so that you can see all of the text. Sometimes it's better to let the text continue right of the window. Then you need to scroll the text left-right to see all of a long line. Switch wrapping off with this command: >
+  :set nowrap
+
+Vim willl automatically scroll the text when you move to text that is not displayed. To see a context of ten characters, do this: >
+
+:set sidescroll=10
+
+This doesn't change the text in the file, only the way it is display.
+
+WRAPPING MOVMENT COMMANDS
+
+Most commands for moving around will stop moving at the start and end of a line. You can change that with the 'whichwrap' option. This sets it to the default value: >
+  :set whichwrap=b,s
+
+This allows the <BS> key, when used in the first position of a line, to move the cursor to the end of the previous line. And the <Space> key moves from the end of a line to the start of the next one.
+
+To allow the cursor keys <Left> and <Right> to also wrap, use this command: >
+:set whichwrap=b,s,<,>
+
+This is still only for Normal mode. To let <Left> and <Right> do this in Insert mode as well: >
+  :set whichwrap= b,s,<,>,[,]
+
+There are a few other flags that can be added, see 'whichwrap'.
+
+VIEWING TAGS
+
+When there are tabs in a file, you cannot see where they are. To make them visible: >
+ :set list
+
+Now every tab is displayed as ^I. And a $ is displayed at the end of each line, so that you can spot trailing spaces that would otherwise go unnoticed.
+A disadvantage is that this looks ugly when there are many Tabs in a file.
+If you have a color terminal, or are using the GUI, Vim can show the spaces and tabs as highlighted characters. Use the 'listchars' option: >
+ :set listchars=tab:>-,trail:-
+
+Now every tab will be displayed as ">---" (with more or less "-") and trailing white space as "-". Looks a lot better, doesn't it?
+
+KEYWORDS
+
+The 'iskeyword' option specifies which characters can appear in a word: >
+
+  :set iskeyword
+    iskeyword=@,48-57,_,192-255 ~
+
+The "@" stands for all alphabetic letters. "48-57" stands for ASCII characters 48 to 57, which are the numbers 0 to 9. "192-255" are the printable latin characters.
+Sometimes you will want to include a dash in keywords, so that commands like "w" consider "upper-case" to be one word. You can do it like this: >
+
+:set iskeyword+=-
+:set iskeyword
+  iskeyword=@,48-57,_,192-255,- ~
+
+If you look at the new value, you will see that Vim has added a comma for you. 
+  To remove a character use "-=". For example, to remove the underscore: >
+  :set iskeyword-=_
+  :set iskeyword
+<    iskeyword=@,48-57,192-255,- ~
+
+This time a comma is automatically deleted
+
+ROOM FOR MESSAGES
+
+When Vim starts there is one line at the bottom that is used for messages.
+When a message is long, it is either truncated, thus you can only see part of it, or the text scrolls and you have to press <Enter> to continue.
+You can set the 'cmdheight' option to the number of lines used for messages. Example: >
+:set cmdheight=3
+
+This does mean there is less room to edit text, thus it's a compromise
+=======================================================================
+vimrc
+1.首先这是一个配置文件，目前知道它的作用是把你的命令放到该文件中，在启动vim的时候就会将配置文件中的命令执行
+2.配置文件可以放在好几个地方，并且优先级不同~/.vimrc  ~/.vim/vimrc
+3.已存在配置文件的情况下用:edit $MYVIMRC来编辑配置文件;如果还没有配置文件可以参考|vimrc|来在某个位置创建指定名称的配置文件
+4.set incsearch 设置搜索时动态的看到搜索匹配
+5.重启Vim才生效的配置和无需重启生效配置
+6.|usr_41.txt|讲了如何编写Vim脚本
+7.使Vim在非兼容模式下启动的vimrc文件$VIMRUNTIME/vimrc_example.vim
+8.Vim是Vi的增强版本，也可以理解为Vim是一个新的软件只是对Vi做了兼容，如果我们不想让Vim向下兼容，则可用:set nocompatible
+9.set backspace=indent, eol, start
+10.set autoindent
+11.if has("vms") set nobackup else set backup endif
+12.set history=50
+13.set ruler
+14.set showcmd
+15.set incsearch
+16.map Q gq
+17.vnoremap _g y:exe "grep /" . escape(@", '\\/') 。 "/ *.c *.h"<CR>
+18.if &t_Co > 2 || has("gui_running") syntax on set hlsearch endif
+19.filetype plugin indent on                 *vimrc-filetype*
+20.filetypes
+21.write-filetype-plugin
+22.autocmd FileType text setlocal textwidth=78
+23.autocmd BufReadPost * if line("'\") > 1 && line("'\") <= line("$") | exe "normal! g`"" | endif
+24.map <F5> i{<Esc>ea}<Esc>
+25.map: \p i(<Esc>ea)<Esc>          :map \c i{<Esc>ea}<Esc>
+26. filetype plugin on
+27.ftplugin/<filetype>.vim   ftplugin/<filetype>_<name>.vim  ftplugin/<filetype>/<name>.vim
+28.helptags ~/.vim/doc
+29.help local-additions
+30.options
+31.set wrap nowrap ~
+32.set so=0 ~
+33.:help 'wrap'
+34.:set iskeyword&
+35.:set nowrap
+36.set sidescroll=10
+37.set whichwrap=b,s
+38.:set list
+39.:set listchars=tab:>-,trail:-
+40. :set iskeyword      iskeyword+=_         iskeyword-=_
+41. :set cmdheight=3
+============================================================
+*usr 03.txt*    For Vim version 8.0.  Last change: 2016 Jan 05
+
+VIM USER MANUAL - by Bramm Moolenaar
+
+Moving around
+
+Before you can insert or delete text the cursor has to be moved to the right place. Vim has a large number of commands to position the cursor. This chapter shows you how to use the most important ones. You can find a list of these commands below |Q_lr|.
+
+============================================================
+*03.1*  在字之间移动
+w和b是一组的,作用是先前向后跳到字首,区别是当光标未位于字首时b会先跳字首，不影响nb的使用
+e和ge是一组的,e和ge位于字首时都可正常向前向后跳到字尾
+              e和ge没位于字首时,e会先跳到当前字字尾
+gE  B   W   E只认空格为分隔符，其它行为同其小写
+*.抓住两点，一是大小写的区别；二是当光标没有位于字首或字尾；对于小写这里引出了一个设置set iskeyword(-=, +=, &)
+**.感觉官方文档说的有不准确的地方，其实有些时候跳到的不是上一个字或下一个字的开头或结尾，应该改为上一个或下一个开头或结尾，因为并不一定是上下一个字的开头或结尾还有可能是当前字的开头或结尾(当游标在字中而不在字首或字尾时)
+===============================
+*03.2* 移动到行首或行道
+用到的命令: ^   $  0   <End>    <Home>
+需要注意的是:1.^和0,<Home>，^移动到当前行的第一个非空字符上,0和<Home>就是移到行首;另外^不建议和数字一起联用，不会出错但是没有任何意义，无论数字是啥都是跳到当前行行首.
+2.$和<End>是跳到行尾,这个不结尾是不是空字符，而且$可以和数字联用,用来跳到以当前行为第一行的第n行行尾
+
+============================================================
+*03.3* 移动到一个字符
+讲的其实是单行搜索
+用到的命令:   f* F*  t*  T*   ;   ,
+f* :向前搜索并将游标定位在该字符上,可重复按
+F* :向后搜索并将游标定位在该字符上,可重复按
+tx :向前搜索并且游标定位在所搜字符前一个字符上,不可重复按
+Tx :向后搜索并且游标定位在所搜字符前一个字符上,不可重复按
+*.这里可不可重复按的解释为，再按相同的组合键还会不会向某个方向搜索
+; 在相同方向上重复
+, 在不同方向上重复
+*.在这里分号和逗号就很好的解决了T*和t*不能重复按的问题，而且还方便了
+**.还讲了想要正向搜索时但输了F要怎么办，应该按<Esc>,即"f<Esc>"会忽略当前的这个命令,这个应该是常识了，其实大部分的命令都可用<Esc>来中止
+============================================================
+*03.4* 匹配括号s
+就讲了一个命令，%,可以用来匹配成对的括号，默认是匹配{},() []这三对，可以通过matchpairs选项进行设置
+============================================================
+*03.5* 移动到指定的行
+讲到的命令：nG gg G H M L n%
+没啥需要讲的，nG跳到全文指定行;gg跳到文件首;G跳到文件尾;n%跳到文件指定百分比的位置;H M L跳到当前屏的最上行、中间行、最下行.
+**.   H: Home    M: Middle   L: Last
+============================================================
+*03.6* 告诉你在哪
+主要讲的就是当前光标在整个文件的多少行多少列多少个字符之类的
+用到的命令: 1. CTRL-G
+            2. :set number
+            3. :set ruler
+*.其实没啥好说的，基本上看到内容都能看明白，要说吧还是有两点： 一。结果可能会有xx-yy这样的字样，这是因为当前字符前面是tab,所以用这种格来说明：举例：
+2-9表示是第二个字符，在第9列，前面8个是tab所占; 二是最好用:set ruler这个设置来看位置，官网推荐说是啥不占地方的;
+============================================================
+*03.7*   滚动(在周围/四周滚动)
+该节主要讲了滚屏操作，如向上向下滚动半屏(CTRL+U/D)，一屏(CTRL+F/B);
+                        看当前行的上下文(其实就是将当前行放到屏幕中央):zz和它相对的还有两个命令"zt"和"zb"分别是将当前行放到屏幕顶上和屏幕底下
+                        一次滚动一行: (CTRL-E/Y)
+                        |Q_sc|部分还有更多的滚动方法
+                        又引出了'scrolloff'选项来设置基于当前光标位置可看上下文的行数
+
+============================================================
+*03.8* Simple searches
+/  ?   n     N
+.*[]^%/\?~$
+:set ignorecase
+在/情况下可以通过按上下键来查找历史并按Enter执行,也可输入历史命令的部分内容然后按上下键进行查找，:命令的用法也同搜索符号/(即上下键和部分字符+上下键查找)
+* # 代替输入字符串，会用游标所在处的单词作为搜索字符串，二者搜索顺序不同，可加数字，即n*  n#
+\<  \>匹配字的开头和结尾
+g*  g# 和* #不同的是它俩即支持部分匹配又支持全字匹配，而* # 只支持全字匹配(举例来说: * #相当于\<abc\>    g#  g*相当于abc)
+高亮显示: set hlsearch/nohlsearch :nohlsearch,不加set的只是将当前的高亮取消，但是再次搜索的时候被匹配到的字符串还是会被高亮的
+*.这些命令都是在本次有用，下次再重启Vim就没用了，所以想要永久的失效就要将命令写到配置文件中，让Vim启动时自己加载
+:set incsearch 搜索输字母的时候可实时看到匹配的字符串，好处是可以随时知道是否有相匹配的字符串
+:set wrapscan/nowrapscan  设置搜索的时候到了文件开头或尾后是否要循环搜索。
+:scriptnames貌似是将和vim有关的变量值都打出来了
+============================================================
+*03.9*  简单的搜索模式
+the    ^the    the$   ^the$
+.命令匹配任意单个字符
+要搜索特殊字符要在特殊字符前加转义符号\  如ter\.  -->ter.
+
+============================================================
+*03.10* 使用标记
+``  ''两个反引号或是两个单引号可以在当前位置与跳到该位置之前的位置之间互跳
+引出了跳的概念，宽泛的说是使光标不在同一行移动，如/和n命令，tx fx j k这几个命令不行.因为前两个是在一行之间搜索，后两个虽说可加数字进行远跳，但也不算
+CTRL-O对应``不是只是在两个位置互跳嘛，它能跳更早的，当然是一步步的(Older)
+CTRL-I和CTRL-O对应跳到相对较新的，这里用I仅仅因为在键盘上I在O边上
+**.CTRL-O和CTRL-I的原理可以理解为，我们每一跳的位置都会被追加到列表中，CTRL-O是一个一个从最后往出弹，CTRL-I是将弹出的按顺序又一个个的追加回去
+**.但是一定要先CTRL-O以后再可CTRL-I,没CTRL-O就没CTRL-I
+CTRL-I和<Tab>一样,即用<Tab>键也可实现CTRL-I的功能
+	:jumps 记录着我们每次跳的信息，最后一次使用的条目(入口)被标记为一个">".
+使用m加一个字母的方式做标记，然后使用`加上刚刚设置的字母来跳到那个标记位置
+                                 使用'加上刚刚设置的字母来跳到标记位置行首字母
+
+**.英语语法Move to the text you want to work on,这里面加介词是界为on的对象是text是个名词，如果这里text是一个副词就不用了，想想go to school和go home,再就是有些问句里面经常最后有一个介词,如to,一般这样的句子疑问词应该都是像which这样的，而以动词结尾没有介词的一般都是像where这样的,这句话不准，但是下次碰到的时候有东西可想了
+:marks获取当前标记列表,列表中有几个常驻的特殊居民:
+   ' 跳转之前游标的位置
+   " 文件最后被编辑的位置
+   [ 最后更改的开始
+   ] 最后更改的结束
+   **.但是实验了一下，"没作用一直显示 1行0列
+   **.就这几个位置还要再好好的研究一下
+

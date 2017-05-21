@@ -1,0 +1,21 @@
+2.Using the Python Interpreter
+ 2.1. Invoking the Interpreter
+ a.通常情况下python3.5的安装路径为:/usr/local/python3.5下(如果源码安装的话可以自定义安装路径),并且最好将/usr/local/bin加入shell的搜索路径,这样想打开python3.5的时候不用再输入全路径了,直接输入: python3.5就好
+ b.在windows下,python3.5通常默认被安装在c:\python3.5文件夹下,同样将c:\python3.5这个路径放入path变量中可以简化调用python3.5的操作(即不用输入全路径只需输入python3.5),加入路径的方法为:set path=%path%;c:\python3.5
+ c.退出python3.5的方法:    Unix下:Control-D或quit()     Windows下:Control-Z后回车,quit()
+ d.python解释器的行编辑功能包括交互式编辑,历史替换,有支持readline的系统上还支持代码补全功能
+
+ 2.1.1.Argument Passing
+ a.当用解释器去调用脚本的时候,脚本名和其这的一些参数会被放入一个列表赋给sys模块中的变量argv,这个列表的长度最少是1,如果没有脚本和参数被给出的情况下,sys.argv[0]是空.当脚本参数给的是'-',即标准输入时,sys.argv[0]的值是'-',当使用-c command时,sys.argv[0]的值是'-c'.当使用的是-m module时,sys.argv[0]的值是模块的全名,在-c command 或 -m module之后的选项就不会被python解释器处理了,但是sys.argv中会有
+ b.正常情况下运行python时会调用pythonstartup变量
+ 2.1.2. Interactive Mode
+ a.所谓的交互模式应该就是咱们直接在命令行下输入python后进入的那个模式,也是咱们最常用的,在这个模式下有两个提示符分别为主提示符(默认是>>>)和次提示符(默认是...),主提示符表示你可以输入新命令了,次提示符一般用在多行命令上,表示命令还没有输入完毕
+ 2.2. The Interpreter and Its Environment
+ 2.2.1.Source Code Encoding
+ a.默认情况下python源文件的编码被解释器认为是UTF-8
+ b.如果想让解释器明白,源码是的是其它编码,而不是UTF-8,可以在第一行或第二行指定编码,格式为:  '#! coding:编码' 或  '# -*- coding:编码 -*-'
+Footnotes
+a.在Unix中,由于默认安装的是python2.x版本,该版本在安装的时候自动创建了一个名为python的可执行文件,所以为了不和2.x版本的python冲突,在安装的时候python3.5是不会创建名为python的可执行文件的,所以即使我们装上了python3.5的版本后,输入python执行的还是2.x版本,此时我们要执行python3.5的方法可以将python2.x创建的python可执行文件删掉再创建一个python3.5的名为pythonr
+软链接,但是这样通常不好,因为有些程序中用的python命令必须是python2.x版本才行,python3.x不兼容,故还要保留python2.x的python链接不要动,而是要像前面说的将python3.5的路径加入path中,然后输入phthon3.5来运行python3.5版本.此时就明了了,如果要用2.x的版本,直接输入python即可,如果要用python3.5版本,输入python3.5即可.
+
+

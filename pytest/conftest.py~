@@ -1,0 +1,13 @@
+#! encoding=utf-8
+#content of test_sample.py
+import pytest
+import smtplib
+
+@pytest.fixture(scope="module")
+def smtp(request):
+    server = getattr(request.module, "smtpserver", "aaa.qq.com")
+    smtp = smtplib.SMTP(server)
+    yield smtp
+    print("finalizing %s (%s)" % (smtp, server))
+    smtp.close()
+

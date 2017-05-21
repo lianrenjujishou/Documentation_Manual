@@ -1,0 +1,161 @@
+原文链接:https://docs.docker.com/engine/understanding-docker/
+
+Docker Overview
+Docker是一个开发,shipping和运行应用的开源平台.Docker允许将你的应用程序与基础设施分离开,因此你可能快速的交付软件.使用Docker你可以像管理你的应用程序那样管理基础设置(infrastructure).通过利用Docker的方法(方法论/方法学)来快速的shipping,测试和布署代码,你可以明显的减少写代码与在生产环境中运行代码的延期(这一句翻译的不是很到位,指的应该是利用Docker可以减少从写代码到在产品可以在生产环境中上线的这段时间).
+
+What is the Docker platfom?
+Docker提供了可以在一个被称为容器的这么一个宽松独立的环境中打包和运行应用的能力.由于Docker提供的容器具有独立及安全的特性,故允许你在一台主机上同时运行多个容器.由于容器的轻量性,容器不需要额外再加载hypervisor(翻译为超级管理程序,指的是虚拟机??),因此你可以在相同的硬件配置上运行比虚拟机更多的容器(最后无非是强调用容器比用虚拟机占用的资源少).
+
+Docker提供tooling(怎么感觉如果翻译为工具的话怪怪的)和一个平台来管理容器的生命周期.
+
+a.将你的应用[和相应的组件]封装到Docker容器上
+b.将这些容器分配和发送给你的团队为以后的开发和测试用
+c.将这些应用布署到你的生产环境,不用管你的生产环境是在一个本地的数据中心还是在云端.
+
+What is Docker Engine?
+Docker Engine(Docker引擎)是一个带有下面这些组件的client-server应用:
+
+a.一个server是一种长时间运行的程序,一般被称为守护进程(daemon process).
+b.一个REST API指定了一个接口,程序可以利用这个接口来和守护进程通信并指示守护进程做什么.
+c.一个命令行接口(CLI:command line interface)客户端
+
+                         此处有图一张
+
+
+CLI利用Docker提供的REST
+API通过脚本或是直接在命令行输入命令来控制守护进程或是与守护进程进行交互.许多其它的Docker应用使用underlying(翻译为啥呀?基础的?底层的?)API和CLI.
+
+守护进程(后台程序)创建并管理Docker对象,例如images(镜像),containers(容器),networks(网络),和data volumes(数据卷,在windows下应该就是说的c盘d盘啥的吧).
+
+Note:Docker是在开源的Apache 2.0许可证的许可下.
+
+What can I use Docker for?
+对应用程序的快速,一致的交付
+
+Docker可以简单化(或说合理化)开发的生命周期,通过让开发者工作在提供有你的应用和服务的本地容器这样一个标准的环境中.你也可以将Docker集成到你的持续集成(CI)和持续布署(CD)的工作流中.
+
+考虑下面的例子情节.你的开发者使用Docker容器和同事一起在本地写代码.他们可以使用Docker来将应用推送到一个测试环境中并且自动执行和手动测试.当开发者发现问题了,他们可以在开发环境下修复问题并且重新将应用布署到测试环境进行测试.当测试完成后,将修复好的应用给客户和推送更新的镜像到生产环境中一样简单.
+
+响应布署和缩放
+
+Docker基于容器的平台考虑到高可移植性的workloads.Docker容器可以运行在开发者的本地主机上,或是运行在一个数据中心的物理机或虚拟机上,还可以运行在云端甚至是运行在一个混合的环境中(这个混合的环境是什么鬼,翻译错了?).
+
+Docker的可移植性和轻量级特性也使得动态地管理workloads(工作量)变得简单,并且可以按照商业需要的指示,以尽乎实时来对应用和服务进行scaling up(扩大)或tearing down(拆除) *.对应用和服务进行扩大是什么鬼?
+
+在相同的硬件上运行更多的工作量
+
+Docker是轻量级并且快速的.对于基于超级管理的虚拟机来说,Docker是一种可行的,性价比较高的选择,Docker允许你使用更多的计算能力来实现(达到)你的商业目的.Docker对于高密度的环境及需要较少的资源来做较多事的小型和中型的布署来说是有用的.
+
+What is Docker's architecture?
+Docker使用一个client-server架构.Docker客户端和Docker守护进程的交流肩负着对Docker容器构建,运行以及分配的重任.Docker的客户端和守护进程可以运行在相同的系统上,你也可以用Docker的客户端连接到一个远程的Docker守护进程.Docker的客户端和守护进程通过socket或REST API进行交流.
+
+                             此处有图
+The Docker daemon
+Docker守护进程运行在一个主机上.用户使用Docker客户端与主机上的Docker守护进程进行交互.
+
+The Docker client
+Docker客户端,以docker二进制的形式,是Docker主要的用户接口.Docker客户端从用户处接收命令和配置标记(configuration flags)然后和Docker守护进程进行交流(通信).一个Docker客户端可以和多个不相关的守护进程交流(通信)
+
+Inside Docker(Docker内部)
+想要了解Docker的内部组成(internals),你还需要了解images(镜像),registries(先理解为注册表吧),和containers(容器) *.网上有的内容说docker hub中有镜像,但是有时我们需要维护我们自己的镜像则需要注册一个私有仓库,所以这里我先将registries理解为注册
+
+Docker images
+一个Docker
+image是一个带有说明的只读模板,它的存在是为了创建一个Docker容器,一个image可能是一个安装有apache
+web
+server和应用程序的Ubuntu操作系统.你可以从0开始构建或者是更新images你也可以下载使用别人创建的images.一个image可能是基于一个或多个其它的images,也可能是对一个或多个其它镜像的扩展.一个docker image使用被称为Dockerfile的文本文件进行描述,这个文本文件有着简单且定义明确的语法.关于images更详细的内容,可以参见How does a Docker image work?(https://docs.docker.com/engine/understanding-docker/#how-does-a-docker-image-work)
+
+Docker containers是Docker的run组件
+
+Docker containers
+Docker container是一个可运行的Docker image实例.你可以使用Docker的API或者CLI命令来运行(run),开始(start),停止(stop),移动(move)或是删除(delete)container.当你运行一个container的时候,你可以提供像网络(networking)信息或者是环境变量这样的配置元数据.每一个container都是一个独立并且安全的应用平台,但是可以访问运行在不同主机或是不同容器中的资源,还可以访问永久性存储或是数据库.关于containers更详细的内容可以参看How does a container work?(https://docs.docker.com/engine/understanding-docker/#how-does-a-container-work)
+
+Docker containers是Docker的run组件.
+
+Docker registries
+docker registry是一个images库.registry可以是公用的也可以是私有的,并且registry可以和Docker daemon或Docker client在同一台服务器上也可以是在完全分离的服务器上.更多关于registries的内容可以参看How does a Docker registry work?(https://docs.docker.com/engine/understanding-docker/#how-does-a-docker-registry-work)
+
+Docker registries是Docker的distribution组件.
+
+Docker services
+Docker service允许一组Docker节点一起工作,这些Docker节点运行着自定义数量的副本任务,这些副本任务就是Docker image自己.你可以指定当前运行的副本任务的数量,swarm manager(集群管理器还是集群管理者)要确保负载被平摊在各个工作节点.对于消费者而言,Docker service好像是一个应用.Docker Engine在Docker1.12和更高版本上支持集群模式(swarm mode).
+
+Docker services是Docker的scalability组件.
+
+How does a Docker image work? 
+Docker images是只读的模板,从这个只读的模板Docker containers被实例化.每一个image都是由一系列的layers(层/图层)组成.Docker使用union file systems来将这些layers结合到一个单个的image.Union file systems允许分离(单独的/各自的/分开的/不同的)文件系统的文件和目录,被称为分支(branches),to be transparently overlaid(翻译为啥?透明/明显的覆盖?),形成了单个一致的(coherent)文件系统.
+
+这些layers就是Docker为什么如此轻量级的原因之一.当你改变一个Docker image时,例如当你更新一个程序到新的版本时,则会新建一个layer并且仅仅是用这个新的layer替换掉旧的layer.其它的layers是不动的.为了分配更新,你仅仅需要传送这个更新的layer.分层(layering)加速了Docker images的分配(分发/配送).Docker在运行时决定哪些layers需要被更新.
+
+image被定义在一个Dockerfile文件中.每一个image都是从基础image开始的,例如ubuntu,一个基础Ubuntu image,或者fedora，一个基础Fedora镜像.你也可以用你自己的images来作为新images的基础,例如,如果你有一个基础的Apache image你就可以使用它作为你所有的web应用images的基础.基础image在dockerfile中使用FROM关键字进行定义.
+
+Note:Docker Hub是一个公共的registry,里面存有images.
+
+Docker image是由基础Image使用一组简单,可描述的称为instructions的指令构建的,这些指令被存储在Dockerfile文件中.每一个指令在image中创建一个新的layer.Dockerfile指令的一些例子如下:
+
+a.指定基础image(FROM)
+b.指定maintainer(MAINTAINER)
+c.运行一个命令(run)
+d.添加一个文件或目录(ADD)
+e.创建一个环境变量(ENV)
+f.当从image中运行一个container的时候运行哪个程序(进程)(CMD)
+
+当你需要构建一个image的时候,Docker会读取Dockerfile这个文件,执行里面的指令,然后返回image.
+
+How does a Docker registry work?
+Docker registry里面存的是Docker images.在你构建完一个Docker image之后,你可以将它推送到Docker Hub或者推送到运行着你自己防火墙后面的私有registry.你也可以搜索已存在的images然后将它们从所在的registry拉回到一台主机上.
+
+Docker Hub(http://hub.docker.com/) 是一个公共的Docker registry,在这个公共的Docker registry中保存着很多的images并且允许你将自己制作的images贡献到里面.更多信息,可以去Docker Registry(https://docs.docker.com/registry/overview/)和Docker Trusted
+Registry(https://docs.docker.com/docker-trusted-registry/overview/)看看
+
+Docker store(http://store.docker.com/)允许你买卖Docker images.对于image,你可以从软件厂家购买一个包含着应用和服务的Docker image,然后使用这个image将应用布署到你的测试环境,演示环境和生产环境,然后通过拉取新版本的image和重新布署这个容器来更新应用.Docker Store当前处于内测阶段.
+
+How does a container work?
+container使用主机的Linux kernel,并且container由创建image时添加的所有文件及在创建容器(这里面的at creation是指的创建容器吗?先这样翻译吧)或容器启动时的相关元数据(这里的相关元数据应该就是指第二幅图中的网络等等的那些东西吧)组成.每个container都是由一个image创建的.image定义了container的内容,当container运行时要运行哪个程序,和各种各样其它的配置详情.Docker image是只读的.当Docker从一个image运行一个container时,Docker会在image的顶部使用先前我们见过的UnisonFS添加一个可读写的layer,你的程序就是运行在这个可读写的layer里.
+
+What happends when you run a container?
+当你在CLI中使用docker run命令或者使用和该命令相同功能的API时,Docker Engine客户端指示Docker Daemon运行一个container.下面这个例子告诉Docker daemon使用ubuntu的Docker image来运行一个container,为了保持在前端使用交互模式(-i),然后运行/bin/bash命令.
+
+$ docker run -i -t ubuntu /bin/bash
+
+当你运行这个命令的时候,Docker Engine做了下面这些事:
+
+a.拉取ubuntu image:Docker Engine检查ubuntu image是否存在.如果已经存在本地,Docker Engine为新container使用它.否则Docker Engine从Docker Hub拉取.
+b.创建一个新的container:Docker使用1中的所述的image创建一个container.
+c.分配一个文件系统并且挂载一个可读写的layer:container在文件系统里被创建并且一个可读写的图层被添加到image中.
+d.分配一个网络接口/桥接接口:创建一个网络接口来让Docker container和本地的主机进行通信.
+e.设置一个IP地址:从地址池中找到并且附加一个有效的IP地址.
+f.执行一个你指定的程序:运行/bin/bash这个可执行程序
+g.捕获并且提供应用输出:连接并且为你记录下标准输入,标准输出和标准错误目的是可以让你看到你的程序是正在如何运行的,因为你要求(使用)交互模式(-i).
+
+你的container现在运行起来了.你可以使用提供的服务(按英文应该指的是container是提供的主语吧?)和应用管理它并且可以与它进行交互,而且最后你还可以停止并移除它.
+
+The underlying technology
+Docker是用Go语言写的并且利用Linux kernel的几个特征(features可能还不是很理解,感觉翻译为特征有点别扭)来对它的功能进行交付(deliver)
+
+Namespaces
+Docker使用了一种称为namespaces的技术来提供称为container的独立工作空间.当你运行一个container时,Docker为你运行的这个container创建了一组namespaces.
+
+这些namespaces提供了独立的一个layer.container的各个方面都运行在一个单独的namespace中并且对那个空间('那个空间'猜测应该是第一句指的那个独立的layer)的访问是被限制的(这句可能翻译的不对).
+
+Docker Engine在linux上使用namespaces如下:
+
+a.The pid namespce:进程(程序?)独立(PID: Process ID).
+b.The net namespace:管理网络接口(NET:Networking).
+c.The ipc namespace:管理对IPC资源的访问(IPC:InterProcess Communication).
+d.The mnt namespace:管理文件系统挂载点(MNT:Mount).
+e.The uts namespace:独立的kernel和版本识别符(UTS:Unix Timesharing System).
+
+Control groups
+Docker Engine在linux上运行还依赖另一项被称为control groups(cgroups)的技术.一个cgroup限制一个应用到一组特定的资源.Control groups允许Docker Engine共享有效的硬件资源到containers然后随意的进行限制和约束.例如,你可以限制一个指定container的有限内存.
+
+Union file systems
+Union file systems,或者叫UnionFS,它通过创建layers,使得文件系统变得又轻量又快(这块有犹豫这个轻快是否指的文件系统?).Docker Engine使用UnionFS来提供containers的构建块.Docker Engine可以使用多个UnionFS的变体文件系统,包括AUFS,btfs,vfs和DeviceMapper.
+
+Container format
+Docker Engine将namespaces,control groups,UnionFS一起封装到一个被称为container格式的wrapper(封装器)中.默认的container格式是libcontainer.以后,Docker可能还会通过与其它技术(例如BSD Jails或Solaris Zones)的集成来支持其它的container格式.
+
+Next steps
+a.阅读关于如何安装Docker Engine.
+b.实践Get Started With Docker中讲述的内容
+c.查看例子然后看Docker Engine User Guide.

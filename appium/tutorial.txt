@@ -1,0 +1,88 @@
+C:\Users\yang\AppData\Local\Android\Sdk\tools\emulator.exe -netdelay none -netspeed full -avd Nexus_6P_API_23
+com.wandoujia.phoenix2
+==============================================
+一.分析一下目前市场对于测试工程师需要掌握的技能?
+::测试由以前的手工一步步的点击然后目测结果的人工测慢慢的向测试自动化转变,这一改变就需要从业人员学习大量的相关知识及工具从而满足自动化测试需求。
+  目前就软件市场上的测试目标大体是: windows下C/S架构APP,B/S架构的网站,还有手机端的APP(Android,Ios)
+  就上文提到的这些目标的测试大概又包括:功能测试，性能测试(压力测试，并发测试,接口测试)，单元测试(又称白盒测试，主要是针对代码的,设计的初终是让开发人员在真正编码前先写单元测试用例来完善单一功能)
+  自动化测试主要是针对功能测试的回归测试，即写完用例后，要将用例转化为相应的测试代码，后期再发版时再要完整测试只要跑一遍代码然后根据输出结果看看新发的代码是否有bug,比较不好的地方就是每次发版可能用例中引用位置的代码会改变，所以要经常检查哪些代码变了，哪些代码是有效的，以保证测试代码的持续有效性，如果能有工具自动跟踪改变的代码会省好大事
+
+==============================================================
+参考链接:https://github.com/appium/python-client#press
+1.APP分为三种:Native,WebView,Hybrid(是前两者的混合产物)
+    driver.current_context是获取当前你正处在哪个框架中(Native or WebView)
+    driver.contexts可以获取当前页面是只用Native写的还是两者都有，返回的是一个列表
+    如果一个页面有不同的context(叫上下文也好，这里我更喜欢叫它环境),则不同的contexts这间相互切换用driver.switch_to.context(这里是一个字符串,也可之前声明这里引用值为相应字符串的变量)
+2.搞清了在哪个框架里面，下面就要讲一下如果定位相应框架中的元素了，Appium提供了好多定位元素的方法，个人觉得其中有一部分是借签selenium，还有一部分用的是利用find_element_by_android_uiaotumator('android的uiselector库中方法'),uiselector库的官方地址:https://developer.android.com/reference/android/support/test/uiautomator/UiSelector.html。这些定位元素的方法除了上面提到的*_uiautomator中具体的定位方法要到相应的网址去找，其它可以直接用的都可以在dir(driver)中找到，这里面的driver是webdriver的一个实例,如driver = webdriver.Remote('http://localhost:4723/wd/hub', desired_caps)
+3.多指点击的TouchAction一开始没找到，后来在stackoverflow中知道需要导入才可用"from appium.webdriver.common.touch_action import TouchAction"，官方说的不清楚，自己也没深入源码去搜; MultiAction也是需要导入from appium.webdriver.common.multi_action import MultiAction
+4.好多动作写完后都需要perform()一下,通过help命令得知，perform()函数的作用是将命令发送到服务器，让服务器去执行从而作用于手机，因为服务器是唯一跟手机通讯的，你写代码的地方只是一个客户端，即客户端》服务器》手机，然后再手机》服务器》客户端
+5.给元素赋值通过set_value('String')方法
+6.下面尽量全的总结一下从一开始测试及测试过程中用到的知识点:
+
+a0.切换到appium安装目录中存放相应node模块的文件中,输入node appium到启动服务，也可以用图形化的界面，一般如果是图形化界面我都会设置devicename参数和sdk版本
+
+a.设置实例化webdriver时用到的字典，暂时给字典起名为desired_caps,该字典常用的组合有1.{'platformName':'Android', 'platformVersion':'6.0', 'deviceName':'HTC', 'app':'c:\迅雷下载\wandoujia.apk'};2.{'platformName':'Android', 'platformVersion':'6.0', 'deviceName':'HTC', 'appPackage':'com.wandoujia.phoenix2', 'appActivity':'com.wandoujia.jupter.xxx'}。这两个第一个当初始化时会安装相应的apk软件，具体已经存在的是重新安还是只是打开这个后续再说，第二个是当软件已经安装好了，你要打开这个软件，其实说打开这个软件不太确切，因为好像一个Package可能有好多个入口Activity,你指定哪个appActivity就会跳了出哪个界面，而不是说千篇一律的显示的第一个界面都是一样的，相当于一个软件有好多间房子连起来的，你进第一个门看到的是第一个屋的样，进第二个屋看到的是第二个屋的样
+
+b.上步设置好字典desired_caps之后就可以实例化了driver = webdriver.Remote('http://localhost:4723/wd/hub', desired_caps).注意在实例化前要将webdriver包导进来(from appium import webdriver)
+
+c.实例化后就可以进行元素的捕捉与操作了，在进行元素的捕捉操作之前还要注意每到一个新页面都要用driver.contexts来看一下当前页面是否为多个框架，如一部分元素是native中的，一部分是webview中的,以防明明语句写对了就是拿不到元素的句柄，这就相当于有两间屋子，有一间屋子里的花太阳一照在另一间屋子里也能看到，但也只限只看到，你用手去摸是摸不着的，因为真实的花是在另一间屋子，两个屋子有东西隔着。如果你当前的屋子里面没花则要用driver.switch_to.context('另一个屋的名称(类似于Native或是webview)')切换到有花的屋进行摸花操作。
+
+d.确认要操作的元素位于你当前所处的driver.current_context了，则要对元素进行选取，选取的方法有很多，根据实际情况进行选用即可,命令的dir命令中提供了26种方法有些下面还有分支(比如android的uiautomator和ios的uiautomation)
+find_element
+find_element_by_accessibility_id
+find_element_by_android_uiautomator(https://developer.android.com/reference/android/support/test/uiautomator/UiSelector.html)
+find_element_by_class_name
+find_element_by_css_selector
+find_element_by_id
+find_element_by_ios_predicate
+find_element_by_ios_uiautomation
+find_element_by_link_text
+find_element_by_name
+find_element_by_partial_link_text
+find_element_by_tag_name
+find_element_by_xpath
+find_elements
+find_elements_by_accessibility_id
+find_elements_by_android_uiautomator
+find_elements_by_class_name
+find_elements_by_css_selector
+find_elements_by_id
+find_elements_by_ios_predicate
+find_elements_by_ios_uiautomation(这个没找到官方东西但找了一篇文章:http://blog.manbolo.com/2012/04/08/ios-automated-tests-with-uiautomation；针对文章的一个翻译:https://zhidao.baidu.com/question/1895153522051267260.html)
+find_elements_by_link_text
+find_elements_by_name
+find_elements_by_partial_link_text
+find_elements_by_tag_name
+find_elements_by_xpath
+
+e.对得到的元素进行赋值使用set_value('String')方法
+f.我们还可以对拿到句柄的元素做诸如tap(轻点),press(按),long_press(长按),release(释放),move_to(移动到...),wait(等待),cancel(取消,官方文档有说但是当前使用的版本的TouchAction()实例属性没有cancel，这里介绍的其余几种都有),perform(执行,说执行有点太简单了，详细点说是将它前面的命令发送到服务器并让服务器执行)。f中的这些都是TouchAction()实例的方法，针对的是单指操作
+g.还可以利用MultiAction()实例模仿多指同时操作
+h.driver.tap 轻敲
+i.driver.swipe 从一点刷到另一点
+j.driver.zoom 在一个元素上放大，然后做pinch out操作
+k.driver.pinch 在一个元素上缩小，然后做pinch in操作
+l.将前台的程序到后台运行3秒后返回前台:driver.background_app(3)
+m.看软件是否被安装在当前设备上driver.is_app_installed('官方说绑定的程序id,我看例子像是软件的包名')，返回的是True或者False
+n.安装一个应用driver.install_app('/xx/xx.apk')
+o.移除一个应用driver.remove_app('官方说是应用id,我看是程序的包名')
+p.关闭app:driver.close_app(),这个没参数，因为driver就能说明要关闭的是哪个app
+q.运行desired_caps中指定的app:driver.launch_app(),这个也不用参数，函数运行时会自动提取desired_caps中的appPackage值和appActivity值作为参数运行程序(我猜的)
+r.重置当前应用:driver.reset(),无参数，driver能够说明是哪个app
+t.运行任意程序，不一定是配置参数时指定的，手机上安装的任意程序都行:driver.start_activity('包名,就是官方所谓的程序id','该包相对应的入口Activity')
+u.检索app应用字符串:driver.app_strings
+v.向android发送按键事件,如按home键:driver.press_keycode(3) *(https://developer.android.com/reference/android/view/KeyEvent.html)
+w.仅适用于ios。hide_keyboard()不带参数时相当于在文本区域外点击并将焦点移出文本框，如果hide_keyboard('string')里面带参数，则相当于按下所输入的字符串(意思应该是并不会将键盘隐藏，没试过目前觉得是这样)
+x.判断一个元素是否可见用is_displayed()属性看返回值，True或False(这一句是我自己写的，官方没说但是有那么一条语句我看应该是这个意思)
+y.检索当前正在运行的入口activity: driver.current_activity
+z.给元素赋值上面提到过一嘴，形如driver.set_value(el, 'String');
+aa.z中提到给元素赋值，那么就有获取元素的值:el.get_attribute('属性名,如文本属性"txt"')
+ab.检索设备上的文件内容driver.pull_file(),返回的内容编码为Base64:driver.pull_file('filename'),代码中写到的是data = driver.pull_file('filename'); strings = json.loads(data.decode('base64', 'strict'))
+ac.将文件放到设备上driver.push_file(),例子用的方法是指定两个变量一个是设备上的文件绝对路径，一个是文件中的内容，这其实是一个"组装"，而不是说将本地已有内容的文件传到设备的指定路径:path = '/xx/xxx'; data = 'abcdef'; driver.push_file(path, data.encode('base64'))
+ad.这块有一个End test coverage，不是很明白，有一个语句:coverage_ec_file =
+driver.end_test_coverage(intent='android.intent.action.MAIN',
+path='')，百度了一下好像是生成一个代码覆盖率的文件
+ae.锁上设备，限ios  driver.lock(),如加参数则表示几秒后锁设备
+af.摇动设备, driver.shake(),ae和af中是函数还是属性没测试
+ag.最后还有一个对appium服务器的设置，如driver.get_settings()可以得到相应的设置属性，driver.update_settings({"some
+setting":"value"})可进行相应的设置，这个有文档(https://github.com/appium/appium/blob/master/docs/en/advanced-concepts/settings.md),具体都有啥属性这个慢慢深入再看

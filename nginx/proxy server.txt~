@@ -1,0 +1,68 @@
+介绍
+proxying的典型用法是在多台服务器上分担负载(即负载均衡),可以从不同的网站无缝的显示内容,或者传递要处理的请求到应用服务器通过除HTTP外的其它服务器
+传递一个请求到代理服务器
+当NGINX代理一个请求的时候,它会将请求发送到一个指定的代理服务器,然后抓取代理服务器响应给它的内容,最后将从代理服务器抓取到的内容反给用户的客户端.可以使用一个指定的协议将请求发送到HTTP代理服务器或非HTTP代理服务器(如PHP或Python).支持的协议包括FastCGI,uwsgi,SCGI,memcached.
+为了传递一个请求到HTTP代理服务器,可以在一个location里面指定proxy_pass指令,例如:
+location /some/path/ {
+proxy_pass http://www.example.com/link/;
+}
+这个例子中的配置的结果是传递该location中的所有请求到指定地址的代理服务器.这个地址可以是域名也可以是IP地址.而且地址还可以包含一个端口:
+location ~ \.php {
+proxy_pass http://127.0.0.1:8000;
+}
+注意,在上面的第一个例子中,代理服务器跟着一个URI,/link/.如果这个URI与地址一起指定,则在传递请求时这部分会替代location后的参数.接第一个例子,有一个后缀为/some/path/page.html的URI将被代理到http://www.example.com/link/page.html.如果指定的地址后面没有URI,或是不可能决定要被替换的URI,才会将location后的参数传递到地址后面形成完整路径.(前面讲的哪个指令不是说过完整的路径是用location后的位置参数附加到指定指令后面才形成一个完整路径嘛,该段要说的就是如果proxy_pass的参数不单单是一个ip或是一个顶级域名后面还跟着目录名,则proxy_pass后的参数地址就是一个完整的了,不用再将location后的位置参数啥的加到该地址的后面才能形成完整路径)
+为了传递一个请求到一个非HTTP代理服务器,应该在合适的上下文中指定相应的**_pass指令	
+	fastcgi_pass 传递一个请求到FastCGi服务器
+	uwsgi_pass 传递一个请求到一个uwsgi服务器
+	scgi_pass 传递一个请求到一个SCGI服务器
+	memcached_pass 传递一个请求到一个memcached服务器
+注意,在上面四种指令中,指定地址的规则可能是不同的.你可能需要传递额外的参数到服务器(可以参看 reference document 来了解详情)
+proxy_pass指令可以指向一个被命名的服务器组.这种情况下,请求会根据指定的方法分发到组中的服务器中
+传递请来头
+默认情况下，nginx会在代理的请求中重新定义两个头字段,'Host'字段和'Connection'字段,并且会取消值为空的头字段.'Host'被设置为$proxy_host变量,'Connection'被设置为close.
+为了改变这些设置,并且修改其它的头字段,使用proxy_set_header指令.该指令可以被指定在location或更高层的上下文中.它还能用在指定的server上下文或是http块中,例如:
+location /some/path {
+proxy_set_header Host $host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_pass http://localhost:8000;
+}
+在这个配置中'Host'字段被设置为$host变量的值
+为了阻止一个头字段被传递到代理服务器,可以将该字段设置为空字符串(上面刚刚说过除了会修改'Host'和'Connection'两个字段外,还会删除值是空的头字段)
+location /some/path {
+proxy_set_header Accept-Encoding "";
+proxy_pass http://localhost:8000;
+}
+配置缓冲
+默认nginx会对来自代理服务器的响应进行缓冲.来自代理服务器将响应返回给nginx服务器时,是放在nginx服务器的缓冲中,当nginx接收了一个链接的所有响应后才会将响应发送给客户的客户端.缓冲可以提高较慢客户端的性能,如果nginx从代理服务器接到一点就向客户端发一点这样会浪费代理服务器的时间.然而,当缓冲功能开启的时候nginx允许代理服务器快速处理响应,当nginx存储响应的时间和客户端需要下载的时间一样多的话.
+开启或禁用缓冲的指令是 proxy_buffering .默认情况下被设置为on,即开启状态.
+proxy_buffers指令用来控制着分配给一个请求的缓冲大小和数量.代理服务器返回响应的第一部分被存储在一个单独的缓冲中,该缓冲的大小可以通过proxy_buffer_size指令设置.这部分通常包含相对较小的响应头,所以通常可以将该缓冲设置相对于剩下的响应更小.
+下面的例子中,缓冲器的数量比默认的要多,而存储响应第一部分,响应头,设置的缓存比默的小.
+location /some/path {
+proxy_buffers 16 4k;
+proxy_buffer_size 2k;
+proxy_pass http://localhost:8000;
+}
+如果在指定的location中禁用缓冲,可以将proxy_buffering指令放在其中,并将参数值设置为off
+location /some/path{
+proxy_buffering off;
+proxy_pass http://localhost:8000;
+}
+上面这个例子,nginx仅仅使用proxy_buffer_size指令设置的缓冲大小来存储响应的当前部分(proxy_buffering被禁用后用户客户端部分与nginx服务器部分是同步接收数据的)
+反向代理的通常用法是提供负载均衡.对于如果改善power,性能及关注快速布置APPs的知识可以看Five Reasons to Choose a Software Load Balancer
+选择一个输出IP地址
+如果你的代理服务器有几块网卡,有时你需要指定一个特定的IP地址用来和代理服务器进行连接和上传数据流.如果nginx后的代理服务器配置了只允许特定的IP网络或特定的IP地址段进行连接的话,指定一个IP地址是非常有用的.
+可以用 proxy_bind 指令来指定网络接口:
+location /app1/ {
+proxy_bind 127.0.0.1;
+proxy_pass http://example.com/app1/;
+}
+
+location /app2/ {
+proxy_bind 127.0.0.2;
+proxy_pass http://example.com/app2/;
+}
+IP地址也可以用一个变量来代替.
+location /app3/ {
+proxy_bind $server_addr;
+proxy_pass http://example.com/app3/;
+}

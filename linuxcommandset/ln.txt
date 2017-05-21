@@ -1,0 +1,48 @@
+info '(coreutils) ln invocation'
+/usr/share/info/coreutils.info.gz
+File: coreutils.info, Node: ln invocation, Next: mkdir invocation, Prev: link invocation, Up: Special file types
+
+12.2 'ln': Make links between files
+===================================
+
+'ln' makes links between files. By default, it makes hard links; with the '-s' option, it makes symbolic (or "soft") links. Synopses:
+译: 'ln'在两个文件之间制作链接. 默认情况下,
+'ln'制作的是硬链接(百度简单看了一下,对一个文件创作完硬链接后是只能通过ll的结果中权限后面的数字大于等于2判断是否为硬链接,而且还看不出来A是B的硬链接还是B是A的硬链接,且权限后的数字大小是和你创建的该文件的硬链接的数量有关系的,先这样理解); 带有'-s'参数的情况下, 'ln' 制作符号链接(也称作软链接). 梗概:
+
+    ln [OPTION]... [-T] TARGET LINKNAME
+    ln [OPTION]... TARGET
+    ln [OPTION]... TARGET... DIRECTORY
+    ln [OPTION]... =t DIRECTORY TARGET...
+    
+    ~If two file names are given, 'ln' creates a link to the first file from the second.
+     译: 如果两个文件名被给出, 'ln'会创建一个从第二个文件到第一个文件的链接
+     例: ln /usr/sbin/a /home/b
+   说明: 第一个文件/usr/sbin/a是一个真实文件, 第二个文件/home/b是一个链接文件,这个链接文件指向的是第一个文件/usr/sbin/a(这种只有两个文件名不带参数创建的应该就是第9行所说的默认情况下的硬链接,以前没研究过,虽说都是链接,但是不像平时见到的软链接,因为ls -l属性中开头没有l而是一个普通文件,就像是复制过去的,具体的硬链接文件和复制的文件有啥区别以后随着深入慢慢解开这个迷吧)
+    ~If one TARGET is given, 'ln' creates a link to that file in the current directory.
+     译: 如果只有一个(或译为唯一的)TARGET被给出(应该说的是梗概中的第二种情况),
+'ln'会在当前目录下创建一个到那个文件的链接(该链接应该也是硬链接,因为看了一下新生成的链接文件的leading位置也没有l标记而是一个_)
+    ~If the '--target-directory' ('-t') option is given, or failing that if the last file is a directory and the '--no-target-directory' ('-T') option is not given, 'ln' creates a link to each TARGET file in the specified directory, using the TARGETs' names.
+     译: 如果选项'--target-directory' ('-t')被给出,或者失败了that如果最后的文件是一个目录并且'--no-target-direcotry' ('-T')选项没有被给出(or这句我感觉是一个同位语从句(定语从句?),failing和that后说的是一件事), 'ln'会对每一个TARGET文件创建一个链接,使用TARGETs的名字(待深译)
+
+通常 'ln'不会移除已经存在的文件(应该指的是如果你创建的链接文件名称为a而恰好你要创建a文件的目录中有一个文件也叫a，则此时程序就会报错而不会用新的的链接文件a去覆盖已存在的文件a).  使用 '--force' ('-f')选项来无条件地移除它们(这里的它们指的是已存在的同名文件), '--interactive' ('-i') 选项用来有条件地(这里有条件应该指的是会有一个确认移除的提示,如果你选择y才会移除选项n则不会移除,即移除的操作和人有交互)移除它们, '--backup'('-b')选项用来对已存在的重名文件进行重命名.
+
+一个"硬链接"是一个已存在文件的另外一个名字; 这个链接和原始文件是无法进行区分的(也就是说一旦根据一个已存在的文件创建了一个硬链接文件后,别人是区分不出来哪个是原文件,哪个是创建的硬链接文件的,因为互为硬链接的两个文件完全相同).从技术上讲, 原始文件和通过该原始文件创建的硬链接文件之间共享同一个inode(索引节点), 并且该inode包含了关于一个真正文件(file-indeed)的所有信息,inode就是文件的这个说法是不正确的.大多数的系统禁止制作到目录的硬链接; 对于允许对目录创建硬链接的系统,也只有超级用户有权限这样做(伴随着警告,由于创建一个循环将会引起对许多其它实用工具的问题).  硬链接不能够跨越文件系统的界限(应该是说硬链接的原文件和链接文件不能位于两个文件系统上).  (然而, 这些限制对于POSIX来说不是强制性的) 
+
+另一方面,"Symbolic links" (简写为"symlinks") 是一个特殊的文件类型(并不是所有的内核都支持符号链接的: System V release 3 (和更老的)系统没有symlinks) 在这种情况下(在这个特殊的文件类型中)链接文件实际上是通过名字参考(参考,涉及,指的是)另外一个不同的文件.当大多数的操作(opening, reading, writing等等)被传递到这个符号链接文件上时,内核会自动的"废除"(解除参照?)这个链接并在链接(指向)的目标(应该是目录文件吧?)上进行操作.但是某些操作(例如,removing)工作在链接文件本身上,而不是工作在该链接文件所指向的目标文件上.对于通过链接执行对文件的访问来说,链接本身的属主和属组并不是很重要.但是对于从一个带有限制删除位设置的目录中删除一个符号链接来说是有含义(have implication)的. 在GNU系统上, 符号链接的模式没有意义并且不能被改变, 但是在某些BSD系统上, 该模式能够被改变并且将会影响是否该符号链接文件在文件名称解析上会被遍历. *Note (libc)Symbolic Links::.
+
+符号链接可以包含任意的字符串;当符号链接中的字符串没有被解析到一个文件时, 一个 "挂起的符号链接"会发生.  对于创建挂起的符号链接来说没有什么限制.对于是使用绝对的符号链接还是相对的符号链接需要有一个权衡(取舍?).一个绝对的符号链接总是指向同一个文件,即使包含着链接的文件夹被移动了.  然而, 如果符号链接从多个机器上都是可见的(例如(符号链接)在一个网络文件系统上), 被指向的文件可能不总是相同的.  一个相对的符号链接被解析关于(涉及,相对于?)包含链接文件的目录, 并且经常是有用的通过参考相同设备上的文件在没有关于该设备被挂载为什么名字当文件通过网络机器被访问.
+
+当在一个与当前目录不同的位置创建一个相对符号链接时,符号链接的解析将会是不同的比从当前目录中相同名字的解析.  因此, 许多用户喜欢先改变目录到相对符号链接将会创建的地方,以便于tab补全或者其它的文件解析将会发现相同的target与在符号链接中将要被放置的 
+
+程序接受下列的选项. 也可以参考 *note Common options::.
+
+'-b'
+'--backup[=METHOD]'
+*Note Backup options::. Make a backup of each file that would otherwise be
+overwritten or removed.
+译: *Note Backup options::. 对每一个文件做一个备份否则将会字音覆写或是移除.
+
+'-d'
+'-F'
+'--directory'
+

@@ -1,0 +1,813 @@
+1.安装
+1.1介绍
+Selenium Python
+bindings提供了一个简单的API可以用来写函数化的/可接受的测试用例,使用Selenium
+WebDriver.通过Selenium Python API你可以以一个更直观的方式来访问所有的Selenium
+WebDriver提供的功能.
+
+Selenium Python bindings提供了一个方便的API来访问Selenium
+WebDrivers(如Firefox,IE，Chrome,Remote等).当前支持的Python版本是2.7,3.2及更高.
+
+这个文档解释了Selenium 2 WebDriver的API,Selenium 1/Selenium
+RC的API的讲解不包含在这篇文档中.
+
+1.2下载Selenium
+你可以从Pypi page for selenium
+package(https://pypi.python.org/pypi/selenium)下载Selenium Python
+bindings.然而,获取Selenium Python
+bindings更好的方法是使用pip来安装selenium包.Python3.5已经在标准库中包含了pip.你可以这样用pip来安装selenium包:
+
+pip install selenium
+
+你可以考虑使用virtualenv来创建一个独立的Python环境.Python3.5中的pyvenv和virtualenv是差不多的.
+
+1.3对windows用户作详细介绍
+你应该连接上internet来执行这个安装.
+
+1.使用MSI available in python.org download
+page(http://www.python.org/download)来安装Python3.5.
+2.运行cmd.exe进行命令提示符下,然后运行下面给出的pip命令来安装selenium.
+
+C:\Python35\Scripts\pip.exe install
+selenium(不用绝对路径,一般直接Python装好后就会自动将自己的路径放到PATH中)
+
+现在你就可以用Python来运行你的测试脚本了.例如,如果你已经创建了一个使用Selenium模块的脚本并且将脚本保存在C:\my_selenium_script.py中，你可以像下面这样运行该脚本:
+
+C:\Python35\python.exe C:\my_selenium_script.py
+
+1.4下载Selenium服务器
+如果你想要使用远程的WebDriver,那么你需要Selenium server.可以参考Using Selenium
+with remote WebDriver(http://selenium-python.readthedocs.io/getting-started.html#selenium-remote-webdriver)一节来学习更多关于Selenium
+server的内容.如果你是一个Selenium的初学者,你可以跳过这节,继续学习下一章的内容.
+
+Selenium server是一个Java程序.我们推荐使用Java Runtime
+Environment(JRE)1.6或者是更新的版本来运行Selenium server.
+
+你可以从download page of selenium
+website(http://seleniumhq.org/download/)下载Selenium
+server2.x.文件名应该类似于:selenium-server-standalone-2.x.x.jar.你可以总是下载Selenium server的最新版本.
+
+如果Java Runtime Environment(JRE)没有被安装在你的系统上,你可以从JRE from the
+Oracle website(http://www.oracle.com/technetwork/java/javase/downloads/index.html)下载.如果你正在使用GNU/Linux系统并且你对你的系统有root权限,你也可以使用对你的操作系统应该如何安装的介绍来安装JRE.
+
+如果java程序的路径在PATH中,你可以开始Selenium server使用下面这条命令:
+
+java -jar selenium-server-standalone-2.x.x.jar
+
+使用你实际下载的版本来替代上面的2.x.x版本号.
+
+如果JRE不是以root用户来安装的,或者JRE没有位于PATH中(环境变量),你可以输入java程序所在位置的相对路径或绝对路径.相似地,你可以可以输入jar文件的相对路径或绝对路径.那么我们运行Selenium的命令形式如下:
+
+/path/to/java -jar /path/to/selenium-server-standalone-2.x.x.jar
+*.这里说了可以用相对路径或绝对路径运行它,绝对路径就不说了,在linux下指的是从/开始,在windows下指从某个盘符开始(如c盘).绝对路径是相对于你当前的shell也好,实模式dos也好的当前路径(pwd显示的路径),拿linux来说,如果你现在的路径是/home/yang,而你的java命令在/home,则你可以这样引用java,'../java'.
+
+2.开始
+2.1.简单的用法
+如果你已经安装了Selenium Python bindings,你可以从Python中使用它了,例如:
+
+-------------------------------------
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+
+driver = webdriver.Firefox()
+driver.get("http://www.python.org")
+assert "Python" in driver.title
+elem = driver.find_element_by_name("q")
+elem.clear()
+elem.send_keys("pycon")
+elem.send_keys(Keys.RETURN)
+assert "No results found." not in driver.page_source
+driver.close()
+-------------------------------------
+
+上面的脚本可以保存在文件中(如python_org_search.py),然后可以通过下面的方式运行它:
+
+python python_org_search.py
+
+你正在运行的python应该已经安装了selenium模块,才能成功运行该测试用例.
+2.2.对例子的解释
+selenium.webdriver模块提供了所有的WebDriver实现.当前支持的WebDriver实现有Firefox,Chrome,IE和Remote.Keys类提供了键盘上像RETURN,F1,ALT等等这样的键.
+
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+
+接下来创建Firefox WebDriver的实例:
+
+driver = webdriver.Firefox()
+
+driver.get方法会导航到由URL给定的页面.在返回控制给你的测试或脚本前,WebDriver会一直等待直到页面被加载完成(也就是说"页面加载"事件已经触发).应该注意如果你的页面在加载时使用了大量的AJAX,你的WebDriver可能不知道什么时候页面加载完成:
+
+driver.get("http://www.python.org")
+
+下面这行是插入一个断言用来确认标题里含有Python这个单词:
+
+assert "Python" in driver.title(assert一般用在上面已经发生的或是已经存在的东西里面是否含有某东西或是否满足某条件,如果满足则继续执行下面的语句,如果不满足则抛出异常)
+
+WebDriver提供了大量的find_element_by_*形式的方法来找到元素.例如，input
+text元素可以使用find_element_by_name方法来通过它的name属性被定位到.对于定位元素的详细内容可以在Locating Elements(http://selenium-python.readthedocs.io/locating-elements.html#locating-elements)一章中学到
+
+elem = driver.find_element_by_name("q")
+
+接下来我们发送键,这个动作类似于在键盘上按下键.特殊键可以使用从selenium.webdriver.common.keys中导入的Keys类来发送.为了安全起见,我们首先会清空输入区域中之前已有的文本(比如,在我们输入之前里面有一个"Search"单词),因为清除已有的内容不会影响我们的搜索结果:
+
+elem.clear()
+elem.send_keys("pycon")
+elem.send_keys(Keys.RETURN)
+
+页面提交了以后,如果页面本身有内容的话你应该会得到结果.为了确保页面不是未响应或是未发现内容的网页,我们可以下一个断言:
+
+assert "No results found." not in driver.page_source()
+
+最后,要关闭浏览器窗口.你也可以调用quit方法来代替close方法.使用quit方法会退出整个浏览器,而close方法只关闭一个标签,但是如果仅有一个tab被打开,默认情况下无论是使用quit方法还是使用close方法大部分的浏览器都会完全退出:
+
+driver.close()
+
+2.3.使用Selenium来写测试用例
+Selenium主要是用来写测试用例.selenium包本身不提供测试工具或是测试框架.你可以使用Python的unittest模块来写测试用例.也可以使用py.test或nose.
+
+在这章,我们选择unittest作为测试框架.这是一个使用unitest模块被改进(修改)的例子.下面的例子是用来测试python.org的搜索功能:
+
+-------------------------------------
+import unittest
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+
+class PythonOrgSearch(unittest.TestCase):
+    def setUp(self):
+        self.driver = webdriver.Firefox()
+
+    def test_search_in_python_ort(self):
+        driver = self.driver
+        driver.get("http://www.python.org")
+        self.assertIn("Python", driver.title)
+        elem = driver.find_element_by_name("q")
+        elem.send_keys("pycon")
+        elem.send_keys(Keys.RETURN)
+        assert "No results found." not in driver.page_source
+
+    def tearDown(self):
+        self.driver.close()
+
+if __name__ == "__main__":
+unittest.main()
+-------------------------------------
+你可以在shell下运行上面这个测试用例:
+
+python test_python_org_search.py
+.
+-------------------------------------
+Ran 1 test in 15.566s
+
+OK
+
+上面的结果表示测试已经成功完成.
+
+2.4.拆解例子
+首先,所有的基本模块需要被导入.unittest模块是一个内建的Python模块,它是基于Java的JUnit.这个模块为组织测试用例提供了框架.selenium.webdriver模块提供了所有的WebDriver实现.当前被支持的WebDriver实现有Firefox,Chrome,Ie和Remote.Keys类提供了键盘上的RETURN,F1,ALT等特殊键.
+
+import unittest
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+
+测试用例定义的类继承自unittest.TestCase.从TestCase类继承是告诉unittest模块这是测试用例的一种方式:
+
+class PythonOrgSearch(unittest.TestCase):
+
+setUp是初始化的一部分,它在你在测试用例类中写的每一个测试函数被执行之前调用.下面是你正在创建一个Firefox WebDriver的实例.
+
+def setUp(self):
+    self.driver = webdriver.Firefox()
+
+下面这个是测试用例的方法.测试用例方法名应该总是以test这四个字符开头.该方法中的头一行创建了一个对setUp方法创建的driver对象的一个局部引用.
+
+def test_search_in_python_org(self):
+    driver = self.driver
+
+driver.get方法会导航到URL指定的页面.在返回控制权给test或script之前,WebDriver会一直等待直到页面被加载完毕(也就是说,"页面加载"事件被触发).应该注意如果你的页面使用了很多AJAX在加载内容的时候,WebDriver可能不知道什么时候完成页面的加载:
+
+driver.get("http://www.python.org")
+
+下一行是一个断言,用来确定标题里是否含有"Python"这个字:
+
+self.assertIn("Python", driver.title)(要注意区分WebDriver提供的assertIn()方法和python本身的assert in/not in)
+
+WebDriver提供了大量的形式类似find_element_by_*的方法用来找到元素.例如,input
+test元素可以用find_element_by_name()方法通过它的name属性来找到.关于如何找到元素的更详细的内容可以参看Locating
+Elements(http://selenium-python.readthedocs.io/locating-elements.html#locating-elements)一章.
+
+elem = driver.find_element_by_name("q")
+
+接下来我们向input
+test区域发送键,这个发送键类似于直接在键盘上按下键.特殊键可以使用从selenium.webdriver.common.keys导入的Keys类来发送.
+
+elem.send_keys("pycon")
+elem.send_keys(Keys.RETURN)
+
+提交页面之前,如果页面有内容你应该能得到搜索的内容.为了确保页面不是空的,可以通过下断言来判断:
+
+assert "No results found." not in driver.page_source
+
+tearDown方法在每一个test方法执行完后会被调用.它就是用来做所有的善后(清除)工作的.在当前的方法中,tearDown的效果是浏览器窗口被关闭.你也可以调用quit方法代替close方法.quit方法会退出整个浏览器,而close方法则只关闭一个标签(tab),但是如果浏览器只打开一个标签的话,则默认情况下用close还是quit的效果都是退出整个浏览器:
+
+def tearDown(self):
+    self.driver.close()
+
+最后两行是运行测试集的模板代码(对于if __name__ == "__main__":可以好好的看一下,有了它可以在导入的时候被认为是模块,在执行的时候也知道从哪执行,具体的可以好好的看一下它有什么作用)
+
+if __name__ == "__main__":
+    unittest.main()
+
+2.5.用remote WebDriver使用Selenium
+
+为了使用remote WebDriving,你应该保持Selenium server处于运行状态.使用下面的语句来运行Selenium：
+
+java -jar selenium-server-standalone-2.x.x.jar
+
+当运行Selenium server时,你可以看到类似如下的信息输出:
+
+15:43:07.541 INFO - RemoteWebDriver instances should connect to: http://127.0.0.1:4444/wd/hub
+
+上面的信息说明你可以使用这个URL连接到远程的WebDriver。下面是一些例子:
+
+from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
+driver = webdriver.Remote(
+    command_executor='http://127.0.0.1:4444/wd/hub',
+    desired_capabilities=DesiredCapabilities.CHROME)
+
+driver = webdriver.Remote(
+    command_executor='http://127.0.0.1:4444/wd/hub',
+    desired_capabilities=DesiredCapabilities.OPERA)
+
+driver = webdriver.Remote(
+    command_executor='http://127.0.0.1:4444/wd/hub',
+    desired_capabilities=DesiredCapabilities.HTMLUNITWITHJS)
+
+desired capabilities是一个字典,因此你可以不使用默认的字典,自己自定义一个:
+
+driver = webdriver.Remote(
+    command_executor='http://127.0.0.1:4444/wd/hub',
+    desired_capabilities={'browserName': 'htmlunit',
+                          'version': '2',
+                          'javascriptEnabled': True})
+
+3.导航
+你想要利用WebDriver做的第一件事就是导航到一个链接.做这件事一般是调用get方法:
+
+driver.get("http://www.google.com")
+
+在返回控制到test或script之前,WebDriver会一直等待直到页面加载完成(也就是说"页面加载"被触发).值得注意的是如果在加载页面时大量使用了AJAX则WebDriver可能会不知道什么时候页面加载完成.如果你需要确定页面什么时候被加载完成你可以使用waits(http://selenium-python.readthedocs.io/waits.html#waits).
+
+3.1和页面交互
+仅仅能定位到元素的位置用处不大.我们真正想做的是和页面进行交互,或者,更明确的说是和页面内的HTML元素进行交互.首先,要和哪个元素交互,我们必须要找到这个元素.WebDriver提供了许多方式来找到元素.例如,我们定义了如下元素:
+
+<input type="text" name="passwd" id="passwd-id" />
+
+你可以用下列任意一种方法来找到上面提到的元素:
+
+element = driver.find_element_by_id("passwd-id")
+element = driver.find_element_by_name("passwd")
+element = driver.find_element_by_xpath("//input[@id='passwd-id']")
+
+你也可以通过文本找到链接,但是要小心!文本必须要精确匹配!在WebDriver中使用XPATH也要小心.如果有一个以上的元素都匹配上了你的查询,则仅仅会将第一个匹配上的返回,而不管第一个是不是你真正想要的那个.如果什么也没找到,则会抛出一个NoSuchElementException异常.
+
+WebDriver有一个"基于对象"的API;我们用相同的接口来表示所有的元素类型.这意味着尽管你可能看到了很多你可能调用的方法当你点击你的IDE的自动完成按键组合的时候,但是它们不是都有意义或都是有效的.不用担心!WebDriver会尝试着做正确的事情,如果你调用了一个没意义的方法的话(例如,"setSelected()"在一个"meta"标签上),会有一个异常被抛出.
+
+你得到了一个元素后,你想用它做什么呢?首先,你可能会想要向文本区域输入一些文本:
+
+element.send_keys("some text")
+
+你可以使用"Keys"类来模拟键盘输入键头:
+
+element.send_keys("and some", Keys.ARROW_DOWN)
+
+我们可以在任何的元素上调用send_keys方法,这使得测试快捷键成为可能,例如用在GMail中的快捷键.这个方法不好的地方就是在我们向文本区域键入一些东西之前不会将已有的文本清除掉.而是会将你输入的追加到已有的文本后面.你可以使用clear方法简单的清除文本字段或是文本域的内容:
+
+element.clear()
+
+3.2填表
+我们已经看到了如何向文本框或是文本区域键入内容了,但是其它的元素呢?你可以切换下拉的状态,并且你可以使用"setSelected"来设置类似一个OPTION标签被选中的事情.处理SELECT标签不是太坏:
+
+element = driver.find_element_by_xpath("//select[@name='name']")
+all_options = element.find_elements_by_tag_name("option")
+for option in all_options:
+  print("Value is: %s"%option.get_attribute("value"))
+  option.click()
+
+这将会找到页面上的第一个"SELECT"元素,并且轮询all_options中的每一个,打印出它们的值,并且轮流选择每一个.
+
+正如你看到的,这并不是处理SELECT元素最有效的方法.WebDriver支持的类中有一个叫做Select的类,这个类对于这类交互可以提供有用的方法.
+
+from selenium.webdriver.support.ui import Select
+select = Select(driver.find_element_by_name('name'))
+select.select_by_index(index)
+select.select_by_visible_text("text")
+select.select_by_value(value)
+
+WebDriver也提供了取消所有被选择的选项的功能:
+
+select = Select(driver.find_element_by_id('id'))
+select.deselect_all()
+
+上面这两句会取消选择页面上第一个SELECT的所有OPTIONs.
+
+假设在一个测试中,我们需要所有默认被选择的选项列表,Select类提供了一个属性方法可以返回一个列表:
+
+select = Select(driver.find_element_by_xpath("xpath"))
+all_selected_options = select.all_selected_options
+
+获得所有的有效选项:
+
+options = select.options
+
+一旦你已经填好表单了,你可能想要提交它.有一种方法就是找到"submit"按钮并且点击它:
+
+#Assume the button has the ID "submit" :)
+driver.find_element_by_id("submit").click()
+
+或者,使用WebDriver在每一个元素上都提供了submit方法.如果你调用了这个在一个表单内的元素上,WebDriver会沿着DOM走(walk up the DOM)直到找到封闭的表单然后调用在这个封闭的表单上调用submit方法.如果元素不是一个表单,则会抛出一个NoSuchElementException异常:
+
+element.submit()
+
+3.3拖拽
+你可以使用拖拽,移动一个元素通过一个固定的距离或者移动一个元素到另一个元素上:
+
+element = driver.find_element_by_name("source")
+target = driver.find_element_by_name("target")
+
+from selenium.webdriver import ActionChains
+action_chains = ActionChains(driver)
+action_chains.drag_anddrop(element, target).perform()
+
+3.4在窗口和框架之间移动
+没有任何框架或是仅被限制在单个窗口在现代web程序中是很少见的.WebDriver通过使用"switch_to_window"方法,支持在已被命名的窗口间移动:
+
+driver.switch_to_window("windowName")
+
+所有到driver的调用现在都被解释为直接到指定的窗口.但是你怎么能知道窗口的名字呢?可以看一眼源代码:
+
+<a href="somewhere.html" target="windowName">Click here to open a new window</a>
+
+或者,你可以传递一个"window
+句柄"到"switch_to_window()"方法中.知道了这个,我们就可以像下面这样遍历每一个打开的窗口:
+
+for handle in driver.window_handles:
+  driver.switch_to_window(handle)
+
+你也可以从一个框架摆动到另一个框架(或是摆动到内嵌框架):
+
+driver.switch_to_frame("frameName")
+
+可以通过用点拆分路径的方式来访问子框架,你也可以通过索引来指定框架.也就是说:
+
+driver.switch_to_frame("frameName.0.child")
+
+这个句子会进入到会称为"frameName"框架的被命名为"child"的第一个子框架.所有的框架都被对待好像是来自*top*.
+
+一旦我们在框架上完成了工作,我们必须回到父框架,可以使用:
+
+driver.switch_to_default_content()
+
+3.5弹出对话框
+对于弹出的对话框,Selenium WebDriver提供了内建支持.在你触发了打开弹框的动作后,你可以通过下面的方法来访问alert(警告):
+
+alert = driver.switch_to_alert()
+
+上面这条语句会返回当前打开的alert对象。你可以对这个变量访问,取消,读取其中的内容甚至键入提示.这个接口在alerts(警告),confirms(确认),prompts(提示)上工作的很好.查阅API文档来获取更多信息.
+
+3.6导航:历史和位置
+之前,我们讲解了通过get方法来导航到一个页面(driver.get("http://www.example.com"))正如你看到的,WebDriver有许多较小的,注重任务的接口,导航是一个有用的任务.为了导航到一个页面,你可以使用get方法:
+
+driver.get("http://www.example.com")
+
+为了在你浏览器的历史中向后或向前移动,可以用下面的指令:
+
+driver.forward()
+driver.back()
+
+请意识到这个功能完全依赖于底层驱动程序.如果你已经习惯了一款浏览器的行为,但你在其它的浏览器里面调用你熟悉浏览器的一些方法的话,可能会出错.(比如说我习惯了使用chrome浏览器中的get方法,而我现在用firefox浏览器了,我也想要用get方法实现在chrom中的一样功能,可能会出错.我是这样理解的,需要实践)
+
+3.7 cookie
+在我们进行下一步之前,你可能有兴趣了解如何如何使用cookies.首先,首先你需要域,什么样的域呢?cookie对这个域是有效的:
+
+# Go to the correct domain
+driver.get("http://www.example.com")
+
+# Now set the cookie. This one's valid for the entire domain
+cookie = {'name':'foo','value':'bar'}
+driver.add_cookie(cookie)
+
+# And now output all the available cookies for the current URL
+driver.get_cookies()
+
+**.这里要注意，上面表面上看cookie只是一个普通的字典，其实不然，键值是分开的，即cookie = {'name':'foo', 'value':'bar'}其实相当于{'foo':'bar'}但是你不能简写，要按格式写(http://stackoverflow.com/questions/35551144/strange-exception-in-webdrive-when-add-cookie-is-used)
+
+
+
+***.重要的是要搞清楚driver代表的是整个页面的内容,a=driver.xxx,然后b=a.get_by_xxx('')则是从a中取东西,而不是整个页面(driver),就理解为周扒皮一层一层的扒,一层比一层少
+
+4.定位元素
+有不同的方案可以定位页面中的元素.你可以根据页面的实际情况来挑选适合的定位方案.Selenium提供了下列的方法来定位页面内的元素:
+
+find_element_by_id
+find_element_by_name
+find_element_by_xpath
+find_element_by_link_text
+find_element_by_partial_link_text
+find_element_by_tag_name
+find_element_by_class_name
+find_element_by_css_selector
+
+为了找到多个元素(下面这些方法会返回一个列表):
+
+find_elements_by_name
+find_elements_by_xpath
+find_elements_by_link_text
+find_elements_by_partial_link_text
+find_elements_by_tag_name
+find_elements_by_class_name
+find_elements_by_css_selector
+
+除了一右给也的公用共方法外,还有两个私有方法这两个方法和页面对象内的定位器一起很有用.这两个方法是find_element和find_elements.
+例子:
+
+from selenium.webdriver.common.by import By
+
+driver.find_element(By.XPATH, '//button[text()="Some text"]')
+driver.find_elements(By.XPATH, '//button')
+
+下面是一些By类中的有效属性:
+
+ID = "id"
+XPATH = "xpath"
+LINK_TEXT = "link text"
+PARTIAL_LINK_TEXT = "partial link text"
+NAME = "name"
+TAG_NAME = "tag name"
+CLASS_NAME = "class name"
+CSS_SELECTOR = "css selector"
+
+4.1 通过Id定位
+当你知道元素的Id属性的时候,可以使用这个方法.这个方案中,id的属性值被匹配的第一个元素被返回(可能不可能不说,假如有十个标签的id值都是1,则它只返回从上到下第一个找到的id的元素).如果没有元素匹配上给定的id属性,则会抛出一个NoSuchElementException异常.
+
+For instance, consider this page source:
+
+<html>
+<body>
+<form id="loginForm">
+ <input name="username" type="text" />
+ <input name="password" type="password" />
+ <input name="continue" type="submit" value="Login" />
+</form>
+</body>
+</html>
+
+可以用下面的方法来定位表格中的元素:
+
+login_form = driver.find_element_by_id('loginForm')
+
+4.2 通过Name定位
+当你知道元素的name属性的时候,可以使用这个方案,在该方案中,含有name属性的第一个匹配到的元素会被返回.如果没有找到name属性和给定的name属性相同的元素则会抛出一个NoSuchElementException异常.
+
+例如,考虑下面的源码:
+
+<html>
+<body>
+<form id="loginForm">
+ <input name="username" type="text" />
+ <input name="password" type="password" />
+ <input name="continue" type="submit" value="Login" />
+ <input name="continue" type="button" value="Clear" />
+</form>
+</body>
+</html>
+
+username和password元素可以通过下面的语句来定位:
+
+username = driver.find_element_by_name('username')
+password = driver.find_element_by_name('password')
+
+下面的语句将返回'Login'按钮因为它出现在'Clear'的前面:
+*.优先原则吧,名字一样的,谁在前面就将谁返回
+
+continue = driver.find_element_by_name('continue')
+
+4.3 通过 XPath定位
+Xpath是一门用于在XML文档中定位节点的语言.由于HTML可以是XML(XHTML)的实现,因此Selenium用户可以利用这门强大的语言在web应用中定位元素.XPath是对简单的定位方法如通过Id和name属性定位的一个延伸,并且展示了各种各样新的可能性,如定位页面中的第三方复选框.
+
+使用XPath最主要原因之一是对于要选择的元素你没有合适的Id或是name属性时.你即可以使用XPath在absolute terms中定位元素(不建议),也可以定位到有id或name属性的相对元素.XPath定位器也可以通过id和name之外的属性来指定元素.
+
+完全的XPath包含了来自root(html)的所有元素的位置并且结果可能是失败的带有对应用程序的轻微调整.为了找到带有Id或name属性的邻近的元素(一般/理想上是父元素)你可以基于关系来定位目标元素.这更不用说可能会更变并且使你的测试更坚固.
+
+例如,考虑以下的页面源码:
+<html>
+<body>
+<form id="loginForm">
+ <input name="username" type="text" />
+ <input name="password" type="password" />
+ <input name="continue" type="submit" value="Login" />
+ <input name="continue" type="button" value="Clear" />
+</form>
+</body>
+</html>
+
+表格元素可以通过下面的方式定位到:
+
+login_form = driver.find_element_by_xpath("/html/body/form[1]")
+login_form = driver.find_element_by_xpath("//form[1]")
+login_form = driver.find_element_by_xpath("//form[@id='loginForm']")
+
+1.Absolute path(绝对路径)(如果HTML仅仅被轻微的改变的话会被打断/中断/暂停)
+2.HTML中的第一个表格(form)元素
+3.带有id属性并且id的属性值为loginForm的表格元素
+
+ussername元素可以通过下列方式定位到:
+
+username = driver.find_element_by_xpath("//form[input/@name='username']")
+username = driver.find_element_by_xpath("//form[@id='loginForm']/input[1]")
+username = driver.find_element_by_xpath("//input[@name='username']")
+
+1.带有一个Input子元素,并且这个子元素含有name属性,且name属性值为username的第一个表格元素
+2.带有id属性并且id属性值为loginForm的表格(form)元素的第一个input子元素
+3.带有name属性且name属性值为username的第一个input元素
+
+'Clear'按钮元素可以像下面这样定位:
+
+clear_button = driver.find_element_by_xpath("//input[@name='continue'][@type='button']")
+clear_button = driver.find_element_by_xpath("//form[@id='loginForm']/input[4]")
+
+1.找到带有名为name且name值为continue并且带有type属性且type属性值为button的input元素.
+2.带有id属性且id属性值为loginForm的表格元素的第四个input子元素
+
+这些例子只描述了一些基本的东西,为了学到更多,可以参考下面的推荐:
+
+W3Schools XPath Tutorial(http://www.w3schools.com/xsl/xpath_intro.asp)
+W3C XPath Recommendation(http://www.w3.org/TR/xpath)
+XPath Tutorial-with interactive examples.(http://www.zvon.org/comp/r/tut-XPath_1.html)
+
+下面还有一组非常有用的插件,这d三个插件可以帮助发现元素的XPath:
+
+XPath Checker - 建议XPath可以用来测试XPath结果(https://addons.mozilla.org/en-US/firefox/addon/1095?id=1095)
+Firebug - XPath建议是在这个非常有用的插件中许多强大功能之一(https://addons.mozilla.org/en-US/firefox/addon/1843)
+XPath Helper - for Google Chrome(https://chrome.google.com/webstore/detail/hgimnogjllphhhkhlmebbmlgjoejdpjl)
+
+4.4 通过链接文本定位超链接
+当你知道一个锚标签内的链接的文本内容时,可以使用这个方案,如果页面中有相应锚中的链接文本和给定的匹配上了,则将该链接所在的元素返回.如果一个都没匹配上则会抛出一个NoSuchElement的异常.
+
+例如,考虑下面的源码:
+<html>
+<bpdu>
+<p>Are you sure you want to this?</p>
+<a href="continue.html">Continue</a>
+<a href="cancel.html">Cancel</a>
+</body>
+</html>
+
+continue.html链接可以通过下面的方式定位到:
+
+continue_link = driver.find_element_by_link_text('Continue')
+continue_link = driver.find_element_by_partial_link_text('Conti')
+
+4.5 通过Tag名定位元素
+当你想要通过tab名来定位一个元素的时候可以使用这个方案.首先会将含有指定tag名的元素返回.如果没有元素匹配上给定的标签名,则会抛出NoSuchElementException的异常.
+
+例如,考虑下面的源码:
+
+<html>
+<body>
+ <h1>Welcome</h1>
+ <p>Site content goes here.</p>
+</body>
+</html>
+
+h1这个元素可以通过下面的方法定位到:
+
+heading1 = driver.find_element_by_tag_name('h1')
+
+4.6 通过Class名定位元素
+当你想要通过使用类属性名称来定位一个元素的时候,可以使用这个方案.第一个匹配上clas属性值的元素会被返回.如果没有一个元素和给定的类属性值相匹配,则会抛出一个NoSuchElementException的抛常.
+
+例如,考虑下面的源码:
+
+<html>
+<body>
+ <p class="content">Site content goes here.</p>
+</body>
+</html>
+
+'p'这个元素可以说是通过下面的方法定位到:
+
+content = driver.find_element_by_class_name('content')
+
+4.7 通过CSS选择器定位元素
+当你想要通过CSS选择器的语法来定位一个元素时,可以使用这个方案.元素的CSS选择器属性和给定的CSS选择器相匹配上的第一个元素会被返回.如果没有找到和给定的CSS选择器相匹配的元素则会抛出NoSuchElementException异常.
+
+例如,考虑下面的源码:
+
+<html>
+<body>
+<p class="content">Site content goes here.</p>
+</body>
+</html>
+
+'p'元素可以通过下面的方法找到:
+content = driver.find_element_by_css_selector('p.content')
+
+Sauce Labs has good documentation on CSS selectors(http://saucelabs.com/resources/selenium/css-selectors)
+
+5.等待
+目前大多数的web应用都会使用AJAX技术.当一个页面被加载到浏览器,页面内的元素可能会在不同的时间间隔才加载.这使得定位元素很困难,如果元素没有表示在DOM中,则会抛出ElementNotVisibleException异常.使用waits，我们就可以解决这个问题.waiting提供了一些时间间隔在被执行期间-主要的定位元素或者元素的其它操作.
+
+Selenium Webdriver提供两种类型的waits-implicit和explicit.一个explict
+wait可以使WebDriver等待一个确定的条件才发生在进行更进一步的执行前.一个implicit
+wait使得WebDriver给DOM一个确定数量的时间当尝试着定位一个元素的时候.
+
+5.1 精确等待
+一个explict
+wait是一段你定义的用来等待一个确定条件发生的代码在进一步处理前。最糟糕的条件就是time.sleep(),它设置这个条件到一个精确的等街坊时间段.这里有一些方便的方法来帮助你写让你等待任你需要的时间长度的代码.WebDriverWait和ExpectedCondition结合就是一种方式.
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+driver = webdriver.Firefox()
+driver.get("http://somedomain/url_that_delays_loading")
+try:
+    element = WebDriverWait(driver,
+10).until(EC.presence_of_element_located((By.ID, "myDynamicElement")))
+finally:
+    driver.quit()
+
+上面的代码意思是等待10秒在抛出一个TimeoutException之前,如果发现了元素就会将元素返回在这10秒内.WebDriverWait默认是每500毫秒调用一次ExpectedCondition直到成功返回.成功的回报对于ExpectedCondition类型是布尔型true或者非空的返回值对于其它的ExpectedCondition类型.
+
+Expected Conditions
+
+下面有一些常用的条件当我们自动化处理浏览器时.下面列出的是每一个的实现.Selenium
+Python binding提供了一些方便的方法因此你不必再自己写一个expected_condition类或者是创建你自己的工具包.
+**.下面这几个都是EC中自带的类,可以通过help(EC.xx)来看看参数是
+字符串:这个不用说,就是形如("string")
+是locator:这个用的是导入的By,形如(By.XX, "XXname") 需要注意的是By的属性都是大写的
+还是webelement:这个形式是最常见的，形如(driver.find_element_by_xx("xxname"))
+title_is   #title_is("subject")
+title_contains   #title_contains("partial_text")
+presence_of_element_located  #~(By.xx, "xxname")
+visiblility_of_element_located  #~(By.xx, "xxname")
+visibility_of  #~(driver.find_element_by_xx("xxname"))
+presence_of_all_elements_located #~(By.XX, "XXname"),返回的是一个list
+text_to_be_present_in_element  #~((By.XX, "XXname"),"substring"),需要注意的是这里的"substring"必须是挨着的,如我们搜索到的文本为"深呼吸",则必须是"深, 呼,吸,深呼,呼吸"才行，"深吸"是不行的,这一点一定要注意
+text_to_be_present_in_element_value #用法和上面没有_value的一样,作用不同，它基本上是对于像文本框这种可以输入内容的元素来说的,当啥也不输时,检测的应该是元素中value属性的值,如果输入了内容则检测的是你输入的内容,看你要匹配的子串是不是在你检测的内容中,还是子串字符必须是挨着的
+frame_to_be_available_and_switch_to_it  #~((By.XX, "frameXXname")),这个前面不用放变量，它的作用是如果框架名有效并且可以切换到该框架下则切换到该框架下
+invisibility_of_element_located  #~((By.XX, "XXname"))当xxname是一个不存在的元素时返回true,当是一个存在但是是隐藏的元素则返回该隐藏元素的webelement
+element_to_be_clickable  #~((By.XX, XXname)),如果XX元素存在则返回该元素的webelement
+staleness_of  #~(driver.find_element_by_xx("xxname"))
+作用是对于一个当前页面已存在的元素，一旦检测到该元素不存在了(在存在DOM中)则会返回True，否则就会返回超时，前提是当前页面必须有该元素，如果用该方法但是当前页面没有该元素会报无该元素异常的
+element_to_be_selected  #~(driver.find_element_by_xx("xxname"))
+针对的应该是复选框,当程序处于监听状态时，将所监听的未勾选的复选框给勾上则程序会返回True，否则到时间了会抛出超时异常
+element_located_to_be_selected  #~((By.XX, "XXname")) 和element_to_be_selected一样，唯一不同的是定位元素的方法不同,检测到元素是可选状态时返回的也是True
+element_selection_state_to_be #~(driver.find_element_by_xx("xxname"),True/False) 和下面这条效果一样只是该程序要求的参数是webelement，而下面那个要求的是由By类返回的locator
+element_located_selection_state_to_be  #~((By.XX, "XXname"),True/False),如果当前元素的状态满足True/False则返回true，不满足的话就一直等着直到设定的时间结束然后抛出一个异常
+alert_is_present
+**.上面这些条件都是在WebDriverWait()的until方法中使用得到的结果
+from selenium.webdriver.support import expected_conditions as EC
+
+wait = WebDriverWait(driver, 10)
+element = wait.until(EC.element_to_be_clickable((By.ID, 'someid')))
+
+当和WebDriverWait一起使用时,expected_conditions模块包含了一组预先定义好的条件来使用
+
+5.2 模糊(隐式)等待
+一个implicit wait将要告诉WebDriver投票DOM一个确定数量的时间当尝试着找到一个元素或是多个元素的时候,如果它们(这个它们指的是谁?)没有立刻就有效的话.默认的设置是0.一旦设置,implicit wait被设置了WebDriver对象实例的生命周期
+
+from selenium import webdriver
+
+driver = webdriver.Firefox()
+driver.implicit_wait(10) #seconds
+driver.get("http://somedomain/url_that_delays_loading")
+myDynamicElement = driver.find_element_by_id("myDynamicElement")
+
+6.页面对象
+这章是一个介绍页面对象设置模式的教程.一个页面对象表示一个区域在web应用程序用户接口上并且你的测试是交互的.
+
+使用页面对象模式的好处:
+
+创建可复用的代码,这些代码可以被多个测试实例共享
+减少重复代码的数量
+如果用户接口改变了,则维护仅需要改变一个地方
+
+6.1 测试实例
+这是一个用来搜索python.org网址上的单词并且确定页面不是无效的测试用例:
+
+import unittest
+from selenium import webdriver
+import page
+
+class PythonOrgSearch(unittest.TestCase):
+    """A sample test class to show how page object works"""
+    def setUp(self):
+        self.driver = webdriver.Firefox()
+        self.driver.get("http://www.python.org")
+    def test_search_in_python_org(self):
+        '''
+        Tests python.org search feature.Searches for the word "pycon" then verfied
+        that some results show up.Note that it does not look for any particular text
+        in search results page. This test verifies that the results were not empty.
+        '''
+        
+        #load the main page. In this case the home page of Python.org.
+        main_page = page.MainPage(self.driver)
+        #Checks if the word "Python" is in title
+        assert main_page.is_title_matches(), "Python.org title doesn't match."
+        #Sets the text of search textbox to "pycon"
+        main_page.search_text_element = "pycon"
+        main_page.click_go_button()
+        search_results_page = page.SearchResultsPage(self.driver)
+        #Verifies that the results page is not empty
+            assert search_results_page.is_results_found(), "No results found."
+
+    def tearDown(self):
+        self.driver.close()
+
+if __name__ == "__main__":
+    unittest.main()
+
+6.2 页面对象类
+页面对象打算为每一个web页面创建一个对象.遵循这个技术一个位于测试代码和技术实现层的分离层被创建.
+
+page.py看起来是这样:
+
+from element import BasePageElement
+from locators import MainPageLocators
+
+class SearchTextElement(BasePageElement):
+    """This class gets the search test from the specified locator"""
+
+    #The locator for search box where search string is entered
+    locator = 'q'
+
+class BasePage(object):
+    """Base class to initialize the base page that will be called from all
+pages"""
+
+    def __init__(self, driver):
+        self.driver = driver
+
+class MainPage(BasePage):
+    """Home page action methods come here. I.e. Python.org"""
+
+    #Delares a variable that will contain the retrieved text
+    search_text_element = SearchTextElement()
+
+    def is_title_matches(self):
+        """ Verifies that the hardcoded text "Python" appears in page title"""
+        return "Python" in self.driver.title
+
+    def click_go_button(self):
+        """Triggers the search"""
+        element = self.driver.find_element(*MainPageLocators.GO_BUTTON)
+        element.click()
+
+class SearchResultsPage(BasePage):
+    """Search results page action methods come here"""
+    def is_results_found(self):
+        # probably should search for this text in the specific page
+        # element, but as for now it works fine
+        return "No results found." not in self.driver.page_source
+
+6.3 页面元素
+element.py看起来这样:
+
+from selenium.webdriver.support.ui import WebDriverWait
+
+class BasePageElement(object):
+    """Base page class that is initialized on every page object class."""
+
+    def __set__(self, obj, value):
+        """Sets the text to the value supplied"""
+        driver = obj.driver
+        WebDriverWait(driver, 100).until(lambda driver: driver.find_element_by_name(self.locator))
+        driver.find_element_by_name(self.locator).send_keys(value)
+
+    def __get__(self, obj, owner):
+        """Gets the text of the specified object"""
+        driver =obj.driver
+        WebDriverWait(driver, 100).until(lambda driver:driver.find_element_by_name(self.locator))
+        element = driver.find_element_by_name(self.locator)
+        return element.get_attribute("value")
+
+6.4 定位器
+实践之一就是从定位符被使用的位置来分隔定位符字符串.在这个例子中,相同页面的定位符属于相同的类:
+
+locators.py看起来这样:
+
+from selenium.webdriver.common.by import By
+
+class MainPageLocators(object):
+    """A class for main page locators. All main page locators should come here"""
+    GO_BUTTON = (By.ID, 'submit')
+
+class SearchResultsPageLocators(object):
+    """A class for search results locators. All search results locators should
+come here"""
+    pass

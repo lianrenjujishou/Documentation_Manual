@@ -1,0 +1,409 @@
+41.1 Introduction
+41.2 Variables
+41.3 Expressions
+41.4 Conditionals
+41.5 Executing an expression
+41.6 Using functions
+41.7 Defining a function
+41.8 Lists and Dictionaries
+41.9 Exceptions
+41.10 Various remarks
+41.11 Writing a plugin
+41.12 Writing a filetype plugin
+41.13 Writing a compiler plugin
+41.14 Writing a plugin that loads quickly
+41.15 Writing library scripts
+41.16 Distributing Vim scripts
+===========================================
+41.1 Introduction
+a.None
+---start---
+a.基本上使用vim接触到的第一个脚本文件就是最常用的配置文件: vimrc，当vim启动的时候会读取vimrc文件，并执行里面的命令
+b.语法文件也是脚本，只不过每个语法文件都是针对特定文件类型的
+c.脚本文件中一般用的都是Command模式下的命令，也就是平时编辑文件时，在:后面敲的那些命令
+d.脚本文件中可以每一行首都加个冒号，也可以不加
+e. let a += b   equal to    let a = a + b
+f. 引入了range()函数
+g.引入了三种数值表示方法: 八进制: 0前缀，十进制:无前缀，十六进制:0x前缀(无论代码中写的是什么进制，最终输出的时候用的都是十进制,并且做数学运算时，三种进制可以混用)
+h.表达式中的空格是被忽略的，但还是推荐加上，这样可以使表达式看起来更清晰
+    // echo 0x7f - 036  |  echo 0x7f- 036  |  echo 0x7f -036
+---end---
+
+41.2 Variables
+a.使用let关键字进行变量的声明和赋值  // let a=123
+b.一些特殊的变量  // a:val | v:val | b:val | g:val
+---start---
+a.变量名称是由字母数字和下划线组成，并且不能以字母开头
+b.使用:let命令来查看当前已经定义的变量
+c.在定义变量时，可以通过给变量加前缀来限制变量的作用域  //在一个脚本中let s:count =1 ,则s:count只在该脚本中有效，如果我们引入了其它脚本，恰巧其它脚本中也定义了let s:count = n,则这两个变量是互不影响的，因为s:已规定了count这个变量只在定义的脚本(还是更小一点，函数中?)中有效
+d.常用的加前缀的变量有:
+    b:name 作用域为buffer本地
+    w:name 作用域为窗口本地
+    g:name 作用域为全局
+    v:name Vim预定义的变量
+e.使用:unlet命令删除变量   // :unlet 变量名
+f.使用:unlet命令删除一个不存在的变量时，vim会报错，如果想要删除不存在的变量且让vim不发出任何警告，在unlet后面加一个感叹号即可   // :unlet! 变量名
+g.脚本执行完毕后，其中的定义的本地变量不会被释放，当下次再执行该脚本时，还可使用之前定义的变量值.
+h.引入了exists()函数，它的作用是判断变量是否已经被定义。所以它有一个参数，该参数为变量名，此处需要注意，因为是变量名，所以要使用引号将变量名给括起来，即传入的是字符串，如果直接写变量名，则预处理的时候变量名会被替换为相应的值，得到的结果就不对了，结果是布尔值    // exists("s:count")     !exists("x")
+i.vim将任何非0的内容认为是true,反之
+j.vim在需要将字符串转换为数值的场景下的转换原则是：如果该字符串是以数字开头的，则转换后的结果就是该数字，如果字符串不是以数字开头，则结果是0  
+    // echo 4 + "3true"  ->  7   |   echo 4 + "t3ure"  -> 4
+k.给变量赋值时，如果变量是数值，这个简单，值是几写几就好；如果值是字符串，则需要使用单引号或双引号将值引起来才行，并且单引号和双引号的使用还有区别:
+  使用双引号将字符串括起来时:
+        1.如果字符串内容也有双引号则需将字符串值里的双引号用反斜杠转义
+            // :let name = "\"peter\""   ->   name="peter"
+        2.在双引号括起来的字符串中可以使用特殊字符:
+            \t        <Tab>
+            \n        <NL>, line break    
+            \r        <CR>, <Enter>
+            \e        <Esc>
+            \b        <BS>, backspace
+            \"        "
+            \\        \
+            \<Esc>     <Esc>   
+            \<C-W>     CTRL-W
+            *.最后两个其实是\<name>的实例，name可以是该种形式的任意键
+    
+  使用单引号将字符串括起来时:    
+        0.单引号中的所有字符都是literal的,不需要转义(除了单引号本身，如果使用单引号括起来的字符串值中也有单引号，则值中的单引号需要使用单引号起行转义，即此种情景下两个单引号会输出一个单引号 // let a = 'i am ''a'' police'  -> 'i am 'a' police')，并且在双引号中反斜杠是用于转义，在单引号中反斜杠没有转义的作用，只表示自身\.    
+        1.如果字符串值中的双引号不想使用反斜杠转义，则可以使用单引号将字符串值括起来    
+            // :let name = '"peter"'  ->  name="peter"    
+---end---    
+    
+41.3 Expressions    
+a.表达式可以只有一个操作数，也可以由运算符组成的联合表达式    
+b.表达式有计算型的( + - * / %)还有布尔型的( =~ !=~ == != > >= < <=)    
+---start---    
+a.vim有非常丰富并且用起来非常简单的方式来处理表达式，这里只是列出了一些常用的
+b.上面讲到的numbers,strings,variables本身就是一个表达式，因此在任何需要表达式的地方都可以使用numbers,strings,variables,不要觉得它们可能只有一个数值，但它们也是合法的表达式
+c.表矿式中还可以有一些特殊的值:
+    $NAME    环境变量值(环境变量，非自定义变量)
+    &name    选项值(基本上就是用set命令设置的那些变量值)
+    @r       寄存器值(这么写表示寄存器r的值)
+d.表达式支持数学运算，并且常见的运算符优先级也是支持的
+    //支持的数学运算符  + - * / %
+    //支持的运算符优先级，如 echo 10 + 5 * 2  -> 20  //乘除优先于加减
+                             echo (10 + 5) * 2  -> 30   //先算括号里
+e.多个字符串可以使用点号"."拼接   // echo "foo" . "bar"  ->  foobar
+f.在c语言中的条件表达式在vim中也适用  // a ? b : c
+                                      // echo i > 5 ? "OK" : "NO"
+g. a ? b : c  等价于 (a) ? (b) : (c),即总是先对该结构的三部分最先进行评估(应该就是计算的意思)
+--end---    
+    
+41.4 Conditionals    
+a.条件语句中的条件部分一般用的就是41.3中Expressions讲的内容    
+b.条件语句的条件返回值是布尔型的 true 或 false    
+c.一般条件语句的语法:      
+    if conditon    
+        {statements}    
+    [else if {condition}]    
+        {statements}    
+    [else]    
+        {statements}    
+---start---
+a.条件语句的基本格式没啥说的，和其它语言一样，都是关键字，条件，执行语句，要说在基本格式上需要注意的地方，就是条件后面不需要加冒号，因为有的语言在条件后是需要加冒号的; 还有另一点，也再强调一下，上面说过，vim将0认为是false,将非0认为是true，所以在评估表达式的时候不要晕。
+b.if | condition | statements | elseif | else | endif
+c.vim支持的逻辑运算符: == | != | > | >= | < | <=  //如果表达式正确则返回值为1,不正确返回值为0
+d. v:version是vim的预定义的或叫内预的变量，它返回当前vim的版本号，但和我们在命令行下敲--version得到的表现形式不一样, --version得到的 6.0,用v:version表示为600      // 6.1 -> 601   7.0  -> 700   7.1 -> 701
+e.逻辑操作符两边的操作数可以是数值类型或字符串类型；当两个字符串类型做比较时，是按逐个字符的字节值进行比较(官文中说某些语言中是不这样做的，对于当前来说这句话没啥太大影响)；当比较双方一个是数字类型，一个是字符串类型，vim会先将字符串类型转换为数值类型再做比较，转换方法前面已说过，如果字符串是以数字开头的，则结果值就是开头的这个数字，否则结果就是0
+f.a =~ b  右边的模式在字符串a中找到了匹配的内容则返回值为1，否则为0
+  a !~ b  右边的模式在字符串a中未找到匹配的内容则返回值为1，否则为0
+g.在书写f中的模式b时，最好使用单引号，上面也讲了单双引号的区别，如果使用双引号，可以会在模式b中引入许多的转义，这样不易于阅读
+h.逻辑运算符后可以追加#号表示大小写敏感；追加?表示大小写不敏感
+i.vim中的循环语句之一while的基本格式:
+   // while condition
+           {statements}
+      endwhile
+j.while循环中还有两个重要的关键字，continue和break,这两上就不详细讲了，和其它语言表达的意思一模一样
+k. :sleep命令执行后，可以让脚本在此处停一定的时间再执行后面的命令；其中:sleep 50m 表示的是暂停50毫秒(milliseconds)；如果直接是:sleep 50 后面没有单位则默认的是秒，该例即表示暂停50秒
+---end---
+    
+41.5 Executing an expression    
+a.执行命令常用的有两种: Normal(a,i,p这种) 和 Command(需要先输入一个冒号这种)    
+b.可以在Command模式下使用exe命令(:exe ...)来执行Normal命令,这里需要注意\<Esc>的使用,如果exe后面的命令即有Normal的，又有Command的，如果Normal中有a，i，o这种命令，如果你在插入内容后不按下Esc，则后面的Command命令也会被作为内容输入    
+---start---
+a.vim中有一个功能强大的关键字叫execute,它的作用是将其后面的参数作为命令去执行，而强大的地方在于，参数部分是可以进行拼接的，这样一来，execute命令就很灵活了        // :let tag_name="get_cmd"
+   // :execute "tag " . tag_name   ->运行后相当于执行 tag get_cmd
+b.上面a讲的execute命令只能执行Command模式(:)命令，还有一个normal命令可以用来执行Normal模式的命令;execute和normal命令的区别是，execute命令的参数是一个表达式，而normal命令的参数均是字面值(literal)    // normal gg=G 表示先跳到第一行，然后将所有行缩进
+c.可以将execute命令和normal命令结合使用，其实再结合也不能破坏每个命令的应用形式，所以想要将execute命令和normal命令结合，只能在execute的参数中将"normal"作为起始做字符串的拼接    
+    // :let a = "gg=G"
+    // :execute "normal " . normal_commands   -> :normal gg=G
+d.在使用normal命令时不要忘了\<Esc>的使用，它会模拟按下Esc键，这一点是非常重要的，比如说要:normal i1230i456 ，它得到的结果是在当前行输入1230i456 而我的想法是先输入123，然后跳到行首再插入456 ，改正后为 :normal i123\<Esc>0i456
+e.eval()函数可以用来评估表达式的值：
+    // let optname = "path"
+    // let optval = eval('&' . optname)
+        上两这两句等价于:
+    // exe 'let optval = &' . optname
+---end---
+    
+41.6 Using functions    
+a.函数可以直接在command模式下使用call关键字调用  // :call Abc()    
+b.函数可以作为表达式使用，即表达式出现的地方，函数也可以出现，是合法的 // let a=Abc()    
+c.自定义函数首字母应该大写  //函数名一般可以是大小写字母，数字，下划线，破折号  
+---start---
+a.vim内置了许多函数，来提供各种和样的功能，可以通过:call命令对这些函数进行调用，当然，自定义的函数也可以通过:call命令进行调用,传参啥的和其它语言一样，将参数扔到圆括号里，不同参数使用逗号分隔
+b.可以在表达式中使用函数  // :let line = getline(".")
+                             :let repl = substitute(line, '\a', "*", "g")
+                             :call setline(".", repl)
+  *.这个例子有一些需要注意的地方，之前经常看到getline和setline函数，但对其中的点没有细研，但也大概能猜出啥意思，这里就解释一下吧，应该是当打开一个文件后，文件中的内容就加载到buffer中了，getline()函数的作用是从buffer中取行的内容，"."作为参数表示取的是当前光标所在行的内容；substitute()这个函数的意思好理解，就是替换嘛，主要注意一下它里面的参数，第一个参数line表示要替换的内容，第二个参数表示模式，注意这里用的是单引号，所以'\a'中的'\'就是本意，"*"表示替换后的内容，"g"是标记位，表示替换所有，之前经常用的:s/\\a/*/g应该调的就是这个函数,最后的setline()函数照猫画虎想一下就出来了
+c.预置的函数就不全写出来了，只将它的分类先写出来，之后具体的函数使用再慢慢加上吧:
+String manipulation
+List manipulation
+Dictionary manipulation
+Floating point computation
+Other computation
+Variables
+Cursor and mark position
+Working with text in the current buffer
+System functions and manipulation of files
+Date and Time
+Buffers, windows and the argument list
+Command line
+Quickfix and location lists
+Insert mode completion
+Folding
+Syntax and highlighting
+Spelling
+History
+Interactive
+GUI
+Vim server
+Window size and position
+Mappings
+Testing
+Inter-process comunication
+Jobs
+Terminal window
+Timers
+Various
+---end---
+    
+41.7 Defining a function    
+a.参照41.6吧    
+---start---
+a.vim中允许自定义函数，自定义函数的格式为:
+    :function {name} ({var1}, {var2}, ...)
+    :    {body}
+    :endfunction
+    *.注意，自定义函数的名字首字母必须大写
+b.函数中定义的变量作用域仅仅是函数内部，在函数内部访问全局变量需要使用g:前缀，另外还有前缀"a:"和"s:"
+c.函数中随时使用return来返回值并跳出函数
+*.变量的作用域及变量前缀的具体用法需要好好看一下，作用很大
+d.调用自定义函数和调用内建函数的方法是一样的，唯一不同的是名称不一样；而且即可以直接使用:call命令后直接跟函数，还可以在表达式中使用函数，这些都没啥说的，再讲就太啰嗦了.
+e.有一个例子还是在这里写一下吧:
+    :function Min(num1, num2)
+    :  if a:num1 < a:num2
+    :    return a:num1
+    :  endif
+    :  return a:num2
+    :endfunction
+f.如系统中已有自定义函数Abc了，如果我们想要重新定义Abc函数，在书写的时候要使用关键字function!,注意末尾的叹号，这样就可以重新定义Abc函数了，如果直接使用function Abc()的话，vim会报错，大概意思是函数已存在
+g.在函数定义后加上range关键字，来定义一个可以加范围的函数
+    //如 function A() range   这样定义后，就可以使用a,bA()这样的形式引用了，其中a和b是行数的起始值和结束值，如果这样引用的话，函数只在指定范围的行上生效，而且使用了range后，vim会默认给函数传两个参数，一个是a:firstline,一个是a:lastline，具体见一个例子:
+    :function Count_words() range
+    :  let lnum = a:firstline
+    :  let n = 0
+    :  while lnum <= a:lastline
+    :    let n = n + len(split(getline(lnum)))
+    :    let lnum = lnum + 1
+    :  endwhile
+    :  echo "found" . n . "words"
+    :endfunction
+    *.该函数可以通过10,30call Count_words()的形式引用
+h.函数使用range关键字，突然想到最重要的一点，在引用该函数时，在你指定的范围内，函数只被执行一次；以前经常说linux下某些命令是以行为单位进行操作的，而使用range关键字的函数，则不是以行为单位，而是以你指定范围内的所有内容为单位，然后对这个范围内的所有内容执行一次函数；
+i.对于不带range的函数，调用时也可以加上范围，只不过，这次执行的时候，就是在这个指定的范围内，以行为单位，对每一行都执行一次该函数
+*.所以要搞清定义函数时，加range关键字和不加的区别：
+  1.无论定义函数时加不加range关键字，调用函数时都可以指定范围
+  2.当函数定义加关键字时，vim会默认向函数内传递两个参数，一个a:firstline,一个是a:lastline；而不加range关键字的，就不会有默认传递的参数
+  3.当函数定义加关键字时，调用该函数时，以给定范围内的所有内容为单位，函数只执行一次；
+  4.当函数定义不加关键字时，调用该函数时，函数执行的次数取决于给定的范围，会针对该范围内，每一行都执行一次该函数
+j.这里有三个常用的内建函数:
+  1. line(".")   取当前行的行号
+  2. getline(".")  取光标所在行的内容(从buffer)
+  3. setline(".", val)  设置当标所在行的内容为变量val的值
+k.函数参数个数可以是动态的，但是这个动态数量是有限制的，最多20个.在vim中，定义函数时，如果函数的形参的形式为三个点"...",则表示该位置的参数数量是动态的，最多有20个；并且在函数中引用动态部分的参数时，a:1表示动态参数中的第一个参数，a:2表示第二个，等等，a:0比较特殊，它表示的是动态部分的参数个数，一开始我以为a:0表示的是由所有参数连接而成的字符串呢，a:000它是一个由所有的"..."参数组成的列表.见一个例子吧:
+    :function Show(start, ...)
+    :  echoh1 Title
+    :  echo "start is" . a:start
+    :  echoh1 None
+    :  let index = 1
+    :  while index <= a:0
+    :    echo " Arg " . index . " is " . a:{index}
+    :    let index = index + 1
+    :  endwhile
+    :  echo ""
+    :endfunction
+    *.这里的echoh1的作用是高亮，具体怎么高亮，作用对象是谁，再议
+l. echo | echohl | echon
+m. 可以使用:function命令来列出所有用户自定义的函数(带有函数名称和参数)
+n. 可以使用:function 函数名 来显示函数的定义
+o. 调试脚本(debug-scripts)
+p. 将verbose选项的值设为12或更高可以看到所有的函数调用；设定为15或更高可以看到每行的执行
+q. 使用delfunction 函数名 来删除函数，使用该种形式，如果函数名不存在的话，vim给发出错误信息
+r. function()函数的参数是一个字符串类型的函数名,它的作用是可以根据传入不同的参数然后将不同的函数赋给变量，官文中说的是可以用同一个变量引用不同的函数，不管怎么说明白就好吧，见例子:
+    :let result = 0       " or 1
+    :function! Right()
+    :  return 'Right!'
+    :endfunction
+    :function! Wrong()
+    :  return 'Wrong!'
+    :endfunction
+    :
+    :if result == 1
+    :  let Afunc = function('Right')
+    :else
+    :  let Afunc = function('Wrong')
+    :endif
+    :echo call(Afunc, [])
+    Wrong!
+    *.注意，function()函数赋给的变量名首字母一定要大小，否则会和内建的相混淆，这应该能从侧面看出来，则建函数一般函数名都是小写的；话又说回来了，上面讲的自定义函数的规则就是首字母一定要大小，而这里虽说Afunc是一个变量，但实际上它相同于一个自定义函数的别名，所以首字母大写也是可以理解的
+    *.调用Afunc这样的函数方法是使用call函数，call函数有两个参数，第一个参数是函数引用，第二个参数是函数引用(第一个参数)的参数列表  // echo call(Afunc, [])
+s. 函数中的变量的a前缀告诉vim,这是一个函数参数；s:前缀表示这是一个本地变量
+---end---
+    
+41.8 Lists and Dictionaries    
+a.定义空列表 // let a = []    
+b.列表中的元素可以是任意类型的，还可以做列表的嵌套    
+c.列表中各元素的类型不必相同    
+d.定义空字典 //let b = {}
+e.字典中的内容是键值对
+f.可以利用字典实现面向对象编程(oriented object progamming),实现思路大概是，字典中既可以存储键值对，又可以存储函数，然后定义特殊的函数存到字典中，最后将该函数进行实例化，得到对象，从而利用字典实例面向对象编程
+    let a = ['a','b','c']
+    let b = {'a':'one', 'b':'two', 'c':'three'}
+    function b.translate(line)
+    return map(split(a), (self, v:value,))
+    *.大概是这个意思，但上面的代码不对
+---start---
+a.vim也支持列表类型(List)和字典类型(Dictionary)
+b.列表是一个有序序列，列表元素可以是任何类型的值；也可以内嵌列表。并且列表中的元素不一定都是同一类型的，可以是不同类型。
+c.使用let来定义一个列表   // let alist = ['aap', 'mies', 'noot']
+                          //创建空列表 let alist = []
+d.列表类型的常见函数有add(),extend(),并且还可以使用+号，将加号两边的列表合成新列表:
+    add():
+      // let alist = []
+      // call add(alist, 'foo')
+      // call add(alist, 'bar')
+      // echo alist
+      // ['foo', 'bar']
+    
+    extend():
+      // let alist = ['one']
+      // call extend(alist, ['two', 'three'])
+      // echo alist
+      // ['one', 'two', 'three']
+      *.如果将第二句call调用的函数由extend,改为add,参数不变，则echo alist的结果为:
+      ['one', ['two', 'three']]
+    
+    +:
+      // let alist = ['foo', 'bar']
+      // echo alist + ['sky', 'guard']
+      // ['foo', 'bar', 'sky', 'guard']
+      *.所以对于列表的add方法，extend方法和加号，要抓住要点，在具体使用的时候才不会乱:
+        1.add()函数，第二个参数整个会作为一个元素追加到第一个参数(列表)的后面:
+           // let alist = ['1']
+             // call add(alist, '2')  -> alist = ['1', '2']
+             // call add(alist, ['2', '3', '4'])  -> alist = ['1', ['2', '3', '4']]
+        2.extend()函数，参数也是两个，第一个还是要扩展的列表，第二个参数是一个列表，最终会将第二个参数的列表给解构，然后逐一追加到第一个参数所表示的列表后面(说第二个参数还可以是字典，不过我没用成功，再说吧)
+        3.+号的作用应该和extend()的作用一样，也是将右边的列表解构追加到第一个列表后面，只不过+号和extend()函数的使用形式不同
+          // let alist = ['y', 'q']
+          // alist + ['sky', 'guard']  -> alist = ['y', 'q', 'sky', 'guard']
+        4.for循环的一般形式:
+            // :for {varname} in {listexpression}
+               :    {commands}
+               :endfor
+        5.在for循环的{listexpression}部分，经常会使用range()函数，range()函数的作用是提供一个列表，参数可以是一个，二个，三个; range(6),会创建一个列表，列表有6个数字，这六个数字是连着的，并且起始数字是0，即[0, 1, 2, 3, 4, 5]; range(1,6)会创建一个列表，该列表中的数字是连续的，且第一个元素为1，最后一个元素为6(这块和有的语言不同，有的语言这块是包前不包后的，也就是说对于range(1,6)来说，有的语言创建的列表仅仅是1-5),即[1, 2, 3, 4, 5]; range(1, 10, 2)会创建一个等差列表，首元素是1，后面每个元素比前面的多2，并且最大元素不超过10，即[1,3,5,7,9]，对于有三个参数的range()函数来说，步长还可以是负的，range(10, 1, -2),会创建一个首元素是10，后面每个元素比前面一个少2，最后一个元素不能小于1，即[10, 8, 6, 4, 2]  
+e.上面的例子都只是讲函数怎么用，下面说一个for循环在处理文本的例子:
+:for line in getline(1, 20)
+:  if line =~ "Date: "
+:    echo matchstr(line, 'Date: \zs.*')
+:  endif
+:endfor
+f.字典中存的是键值对，键和值之间用冒号分隔，字典是无序的，可以使用键作为字典索引对相应的键值进行查询,定义字典和列表一样，也是用let   
+  // let uk2nl = {'one': 'een', 'two': 'twee', 'three': 'drie'}
+  // uk2nl['two']  ->  twee
+g.声明一个空字典   // let empty = {}
+h.字典也有许多可用的函数，常用的有:
+    keys(字典)  -->得到以字典键为元素的列表，通常的用法是用keys()函数拿到字典中的键，然后再遍历这个列表得到相应键的值
+    sort(keys(字典))  -> 得到一个按一定规则排序的字典键的列表，但是此时该键的顺序也不是你创建字典时添加键的顺序，因为字典本身的键就是无序的，当你添加一个键值对后，你也不知道字典会给这个键值对放在什么位置；但是我们可以使用一些技巧在键上面，比如从前向后添加的键的命名为a1,a2,...，这样即使最后你拿到的字典的键值对的顺序，从前到后和你添加的顺序不同，但你可也可通过keys()先将键拿出来，然后再对拿到的列表使用sort()函数进行排序，此时的排序一般就是按ascii码啥的排，此时得到键的顺序就是我们添加到字典中的顺序，然后再遍历刚刚排过序的列表，得到的键值对，就是我们一开始定义字典时按顺序添加时的键值对;所以最后一句话总结:虽然字典是无序的，但我们可以通过定制键值对中的键，最后通过排序拿到正确的顺序(写的有点屎，但自己应该能看明白)
+i.字典的索引有两种形式，一种是将键放在[]中，另一种是直接使用.符号
+  // uk2nl['two'] -> 'twee'
+  // uk2nl.two -> 'twee'
+  *.对于使用.符号得到键值的形式，仅适用于键为字母，数字和下划线；[]形式无限制
+j.可以通过i中提到的两种方式给字典赋值
+  // uk2nl['123'] = '456'
+  // uk2nl.123 = '456'
+k.可以在字典中存储函数的引用( This marks the function as being used from a Dictionary暂时翻译为"这标志着该函数被用于字典"，前面说的是函数后面加上dict后缀，后面才有的这句话):
+  // :function uk2nl.translate(line) dict
+  // :  return join(map(split(a:line), 'get(self, v:val, "???")'))
+  // :endfunction
+  // echo uk2nl.translate('three two five one')
+  // drie twee ??? een
+  *.这里需要注意的几点:
+    第一:函数尾部的dict,表示该函数被用于字典
+    第二:get()函数中的参数self,表示字典uk2nl
+  *.map(split(a:line), 'get(self, v:val, "???")') 等价于:
+    :let alist = split(a:line)
+    :for idx in range(len(alist))
+    :  let alist[idx] = get(self, alist[idx], "???")
+    :endfor
+    *.这里其实就是不明白map()函数的用法 以及 v:val变量的用法
+    *.get()函数官文中说了一种场景的用法：在检索不到内容又不想得到报错的情况下，用该函数，因为该函数在没有检索到想要的内容后，会返回一个默认值
+l.使用join(),map(),split()三个函数是很经典的过滤组合方式
+*.下面要讲一下vim中面向对向编程(object oriented programming)的实现
+m.有一句话很重要作为这一点的总结: 现在你可以将值和函数都放进字典里了，实际上你可以将字典作为一个对象使用:
+  :let transdict = {}
+  :function transdict.translate(line) dict
+  :  return join(map(split(a:line), 'get(self.words, v:val, "???")'))
+  :endfunction
+  *.上面定义了一个空字典transdict,又定义了一个用于transdict字典的函数，看看如果用它进行面向对象编程:
+    :let uk2de = copy(transdict)
+    :let uk2de.words = {'one': 'ein', 'two': 'zwei', 'three': 'drei'}
+    :echo uk2de.translate('three one')
+    drei ein
+*.对于官文中的这个例子是明白了：在定义完函数后，查看transdict字典中的内容，发现有一个由于存储在里面的键值对，键为'translate'值为function('1'),这个值应该就是个代指；self.words中这个words并不是关键字，它只是字典中的一个普通的键，只不过在这里给'word'这个键又赋了一个类型为字典的值，理解是不难理解，从中要学到面向对象编程的设计思路
+---end---
+
+41.9 Exceptions
+a.这里的Excptions主要说的是异常的捕获与处理
+b.异常捕获的常见格式:
+            try:
+               {statements}
+            catch /string/:       //捕获异常中含字符串string的异常
+              {statements}
+            
+            try:
+                {statements}
+            catch:                //捕获所有异常，没有过滤条件就表示所有，和上面的catch比一下
+                {statements}
+            
+            try:
+                {statements}
+            catch [/string/]:
+                {statements}
+            finally:              //这个主要是讲finally,具体解释见下面的c
+                {statements}
+c.finally子句是无论如何都会被执行的，无论是异常是否被捕获到，即使在执行时你按了CTRL+C
+---start---
+a.上面讲的基本就够了，没有啥多说的
+---end---
+
+41.10 Various remarks
+:None
+---start---
+a.说了一下mac,linux和windows的行尾结束符，以前是windows:\r\n   linux: \n   mac: \r,好像现在mac也(也要?)改成\n
+b.脚本中允许有空行，并且在执行时空行被忽略
+c.每行开头的空白字符(空格或tab)被忽略.参数之间的空白如果有多个会减少为一个，作为分隔符用，最后一个可见字符后面的空白字符可能被忽略，也可能不被忽略，需要看具体情形:
+    1. :set cpoptions    =aABceFst此例子中，=前面的空白可以被忽略，等号后面不可有空格，因为等号后面的空格应该会被作为值的一部分，如果选项值中非首字母中含有空格，则需要使用\进行转义，否则vim会理解错的:set tags=my nice file如果这样写vim会认为你写的是:set tags=my :set nice :set file,所以你应该将值转义:set tags=my\ nice\ file
+d. 双引号"表示注释的开始，但是也有几点需要注意的:
+  1.正常来说从"开始到该行结束，包括该"在内都算是注释，在执行时都会被忽略，但是有一些命令没有注释的存在，可以理解为有些命令没法放注释，如果放了的话会被作为值的一部分，其中map,abbreviate,execute和!等命令后面不允许有注释，你加上了你以为是注释其实是被作为值的一部分了
+  2.对于1中提到的map,abbreviate,execute命令，想要加注释怎么办呢，可以借助＂|＂字符，它的作用是分隔两个命令
+    :abbrev dev development|" shorhand这里|作为分隔符，第二个命令是一个注释，即"也看作一个命令
+  3.对于!命令想要加注释的话需要做两件事
+    :exe '!ls *.c'       |" list C files
+  4.对于map和abbreviate命令，有效字符是到行尾或是到|处，所以在使用|来添加注释时，|前面不要有空白，否则这些空白会被作为命令的一部分
+  5.在编辑如vimrc这样的文件时，因为空白字符看不出来，所以肉眼正常情况下，如果像map和abbreviate这样的命令后面有拖尾空格的话，也是看不到的，最后可能达不到我们想要的效果，那么怎么在编辑文件时可以看到这些空白呢，可以使用list选项，list选项可以将文中的特殊字符用显眼的字符标记出来，如行尾使用$符，Tab使用^I,这样，空格没有代码就只是空格，这样在编辑文件时，如果选项尾有空格或是Tab这样的就很容易能看出来，Tab这个不用说，可以直接看到^I,空格的话是通过结尾的$符号去看，$前面有没有空格眼不瞎的应该都能看出来吧
+e.:#号命令的作用是显示光标所在行的内容(带着行号)，后面再加个!则这个#号就没用了:#!
+f.调试的时候很时刻注意参数间的空格，有问题了想想|能否解决问题(没看过原文的，读到这一句肯定觉得很空，但看了官文的pitfall部分，应该会清楚一些)
+g.文中举的map ,p ma"aYHmbgg"aP`bzt`a这个例子一开始看时觉得很难，看会了就觉得没啥意思了，其实就是命令的拼接，只要单个命令熟，看这个不是问题
+h.最后讲了一下函数的命名技巧，如果引入了其它库，可能会碰到相同函数名的情况，到时候执行的时候可能会遇到问题，所以在定义你自己的函数时就要想一些小技巧，尽量不会和其它人写的函数名相同，如给函数名加一个有特点的前缀如XXX_unctionName,还有一个比较极端的方法，将自己所有的函数都写在一个文件中，然后在文件尾定义一个全局变量，文件头加一个判断这个全局变量值的语句，如果该值表示之前已加载，则执行delfunction functionName的操作，否则执行函数(第二种方法应该是想到了脚本执行后本地变量啥的不会被自动释放，当二次执行同一个文件时，会先用缓存的这些，所以想到了这么个招，通过检测变量看看是否文件中的函数已经被执行了，哎，脑子有些混乱了，记得有这个方法就行，具体啥场景下用，再说吧)
+---end---

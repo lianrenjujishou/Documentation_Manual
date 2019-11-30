@@ -37,10 +37,11 @@ a.变量名称是由字母数字和下划线组成，并且不能以字母开头
 b.使用:let命令来查看当前已经定义的变量
 c.在定义变量时，可以通过给变量加前缀来限制变量的作用域  //在一个脚本中let s:count =1 ,则s:count只在该脚本中有效，如果我们引入了其它脚本，恰巧其它脚本中也定义了let s:count = n,则这两个变量是互不影响的，因为s:已规定了count这个变量只在定义的脚本(还是更小一点，函数中?)中有效
 d.常用的加前缀的变量有:
-    b:name 作用域为buffer本地
-    w:name 作用域为窗口本地
-    g:name 作用域为全局
-    v:name Vim预定义的变量
+    b:name 作用域为buffer本地    //buffer
+    w:name 作用域为窗口本地     //window
+    g:name 作用域为全局        //global
+    v:name Vim预定义的变量     //predefined by vim
+    s:name 作用域为所在脚本    //script-local
 e.使用:unlet命令删除变量   // :unlet 变量名
 f.使用:unlet命令删除一个不存在的变量时，vim会报错，如果想要删除不存在的变量且让vim不发出任何警告，在unlet后面加一个感叹号即可   // :unlet! 变量名
 g.脚本执行完毕后，其中的定义的本地变量不会被释放，当下次再执行该脚本时，还可使用之前定义的变量值.

@@ -1,0 +1,57 @@
+nginx里面常用的基础块有3个:
+  http{}
+  server{}
+  location{}
+这三个块的位置关系是:
+  http{
+      server{
+            location{
+            }
+      }
+  }
+  *.http块只可以有一个, server块和location块可以有多个
+
+接下来再说块中的指令,每个块中都有很多的指令,常见的有(指令大全: https://nginx.org/en/docs/dirindex.html):
+    listen: 监听的端口          //server
+    root: 设置寻找文件的根目录   // http,server,location
+    index: 索引文件名称         // http,server,location
+    server_name: 匹配Host请求头 // server
+    proxy_pass: 将请求资源定位uri追加到代理服务器后面进行处理
+    *.如果不同辈份的块中出现了同一个指令,则小辈的优先级更高
+这三个块之间大的逻辑也很清楚,最外层的http块表示这是一个http服务器,该块下的指令一般是全局性的一些东西,这里不作讨论, 而http服务器是提供服务的,而具体是为谁(哪个端口)提供服务,就要靠server{}块了,
+其实如果表达成要靠server块和它里面的listen指令就更清楚了,如server{listen 80;}和server{listen 90;}等, 当请求过来后,知道了让哪个server来处理了,后面就是对请求的目录进行处理了,此时就是
+location{}块的工作了,如location / {}则是处理根请求, location ~ \.(jpg|png)$ {}块则是处理后缀是jpg或png的请求.
+
+https://nginx.org/en/docs/http/request_processing.html
+https://nginx.org/en/docs/http/ngx_http_core_module.html#location
+很多时候,不同的server里listen监听的对象是相同的, 此时要怎么确定到底将请求分发给哪个server处理呢:
+    1.当只有listen指令没有server_name指令时,就明确按照哪个listen满足要求就按哪个来:
+    2.当listen和server_name同时存在,且有多个listen满足要求,则哪个server中的server_name匹配请求Host,则最终哪个server处理这个请求;
+    3.                                               但没有一个server_name满足要求,则看listen后面有没有default_server属性,当没有该属性时,则满足条件的这些listen,哪个排序靠上使用相应的server处理该请求;
+    4.                                                                                                             ,当有该属性时,使用相应listen所在的server处理该请求
+    *.0.4.8版本后,如果没有显式的指定server_name,则默认值为空字符串,"".
+    
+很多时候,相应server里的多个locations都满足要求,但具体用哪个location,按照逻辑:
+    1.先匹配前缀locations,找到最长的匹配并记住,但先不用;然后匹配正则locations,如果某个正则location匹配上了则直接使用该正则的location,如果所有的正则locations都没有匹配上,则反过头来使用前缀匹配时,最长匹配的那个location.
+    *.location指令后的形式: 
+        前缀  / /abc /abc/ /abc/x.html
+        正则  ~ \.php$  ~ \.(jpg|png)$ 指定正则必须用~或~*,~表示字符串匹配时区分大小写, ~*表示不区分大小写. 不区分大小写指的是请求过来的资源定位字符串和location后的正则字符串模式匹配时不区分大小写.需要最终寻址路径如果是没有file只有路径的,则是"root+请求过来的uri资源定位字符串+index指令中指定的文件名",如果是有file的,则是"root+uri资源定位字符串",也就是最终的寻址和location后的字符串大小写没关系,看的只是请求过来的uri资源定位字符串.
+        *.前缀 前可以有两个修饰符:  = ^~
+              因为前面说过先匹配前缀,后匹配正则,但只有正则没有满足的才回过头来用最长匹配的长缀所在的location, 如果=修饰符出现,则如果相应的前缀能够完全精确的匹配上请求uri资源定位字符串,则不进行后面的正则匹配了,直接就使用=所在的这个location.
+                                                                                                如果^~修饰符出现在某个前缀前,并且当所有前缀都匹配完发现该前缀还是匹配最长的那个,此时也就不继续进行正则匹配了,还是使用^~所在的这个location. 相反,如果^~修饰的前缀非最长的那个,还是要继续向下匹配正则的,此时如果正则匹配上了用相应正则所在的location,如果正则没有匹配,则使用之前前缀最长匹配.
+    *.凡是资源定位符只有路径没有文件的,并且路径末尾没有/结尾,都会发生两次请求(通过浏览器的networking监控可以看到,301第一次,加上/后200第二次),第一次请求会将请求结尾加上/后再次发送,如果请求过多对服务器也是一个压力,所以在uri只有文件夹路径时末尾加上/也是一个小优化.
+
+proxy_pass的一般用法:
+至少存在两个server:
+    server{
+        listen 80;
+        location /url/ {
+            proxy_pass http://127.0.0.1:8080;
+        }
+    }
+    server{
+        liseten 8080;
+        location /usr {}
+    }
+    
+再说说对php脚本的处理,在nginx.conf中其实对php脚本的处理简单来说只是在相应server中加了一个location

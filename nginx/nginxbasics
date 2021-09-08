@@ -42,4 +42,11 @@ https://nginx.org/en/docs/http/ngx_http_core_module.html#location
 
 当uri是目录会用到索引,用到索引时会导致在内部发生二次匹配: 如location = / {} 和location / {}, 当请求为/时由于先发生前缀匹配并且 = /是最大匹配且有等于号修饰,所以第一次匹配就停止了,又因为uri是个目录,所以要用到index指令指定的文件,如index.html,此时会使用/index.html再次去进行匹配,此时因为/index.html不匹配 = / 所以最终是由 / 所在的location进行处理,最直观的就是这两个location的root指令指定的位置不同时,= /为/var, /为/var/html,你以为会去/var下寻找index.html,但实际上是去/var/html/下寻找. 如果想让http://127.0.0.1/usr和http://127.0.0.1/usr/作为两个请求,则定义两个location,一个是= /usr 一个是 /usr/     
     
-再说说对php脚本的处理,在nginx.conf中其实对php脚本的处理简单来说只是在相应server中加了一个location
+再说说对php脚本的处理,在nginx.conf中其实对php脚本的处理简单来说只是在相应server中加了一个location: https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/
+  1.fastcgi_pass 127.0.0.1:900; //或socket形式
+  2.fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; //这句是最关键的,也就是指定脚本文件名,很多时候,默认的$document_root不对,需要手动指定
+  3.建议将所有的fastcgi_param都放到一个文件中,如fastcgi_params, 再使用include fastcgi_params包含到配置文件,这样便于统一管理
+  4.将<?php var_export($_SERVER)?>放到test.php中,访问test.php文件会看到当前很多php变量值,在配置fastcgi_params时,可能有些变量你不明白啥意思,但当你php环境能用了,通过看test.php中对变量的输出,也能帮助你设置相应的变量参数
+  *.nginx中默认就有对php文件的处理,只不过被注释掉了,但写的比较初级,上面给的这个网址上的配置可能要更好一些.
+  *.至于php环境的设置参照cnblogs中的配置: https://www.cnblogs.com/lianrenjujishou/p/15179953.html
+    *.现在能想到需要注意的就是php中对www.conf文件的应用,因为nginx中127.0.0.1:9000实际上就是php读取该配置文件起作用的.源码编译然后通过使用命令行参数进行运行,会发现一些问题,同时也正是因为这些问题会让你对相应软件有更深的理解

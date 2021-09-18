@@ -38,10 +38,26 @@ https://nginx.org/en/docs/http/ngx_http_core_module.html#location
         *.前缀 前可以有两个修饰符:  = ^~
               因为前面说过先匹配前缀,后匹配正则,但只有正则没有满足的才回过头来用最长匹配的长缀所在的location, 如果=修饰符出现,则如果相应的前缀能够完全精确的匹配上请求uri资源定位字符串,则不进行后面的正则匹配了,直接就使用=所在的这个location.
                                                                                                 如果^~修饰符出现在某个前缀前,并且当所有前缀都匹配完发现该前缀还是匹配最长的那个,此时也就不继续进行正则匹配了,还是使用^~所在的这个location. 相反,如果^~修饰的前缀非最长的那个,还是要继续向下匹配正则的,此时如果正则匹配上了用相应正则所在的location,如果正则没有匹配,则使用之前前缀最长匹配.
-    **.凡是资源定位符只有路径没有文件的,并且路径末尾没有/结尾,都会发生两次请求(通过浏览器的networking监控可以看到,301第一次,加上/后200第二次),第一次请求会将请求结尾加上/后再次发送,如果请求过多对服务器也是一个压力,所以在uri只有文件夹路径时末尾加上/也是一个小优化. //如果不希望这种情况发生,可以定义一个精确匹配,如location = /usr {},此时如果请求是http://127.0.0.1/usr就不会先重定向到http://127.0.0.1/usr/再进行二次请求了,因为服务器端可以精确匹配/usr,
+    **.凡是资源定位符只有路径没有文件的(这句说的不对,结尾是不是文件都有可能被追加/,location中只说了前缀的情况,但没说正则的),并且路径末尾没有/结尾,都会发生两次请求(通过浏览器的networking监控可以看到,301第一次,加上/后200第二次),第一次请求会将请求结尾加上/后再次发送,如果请求过多对服务器也是一个压力,所以在uri只有文件夹路径时末尾加上/也是一个小优化. //如果不希望这种情况发生,可以定义一个精确匹配,如location = /usr {},此时如果请求是http://127.0.0.1/usr就不会先重定向到http://127.0.0.1/usr/再进行二次请求了,因为服务器端可以精确匹配/usr,
 
 当uri是目录会用到索引,用到索引时会导致在内部发生二次匹配: 如location = / {} 和location / {}, 当请求为/时由于先发生前缀匹配并且 = /是最大匹配且有等于号修饰,所以第一次匹配就停止了,又因为uri是个目录,所以要用到index指令指定的文件,如index.html,此时会使用/index.html再次去进行匹配,此时因为/index.html不匹配 = / 所以最终是由 / 所在的location进行处理,最直观的就是这两个location的root指令指定的位置不同时,= /为/var, /为/var/html,你以为会去/var下寻找index.html,但实际上是去/var/html/下寻找. 如果想让http://127.0.0.1/usr和http://127.0.0.1/usr/作为两个请求,则定义两个location,一个是= /usr 一个是 /usr/     
-    
+
+*****问题1*****
+location匹配方式有两种, 前缀和正则, 而
+location块中匹配位置的指令常用的有两种, root和alias,当
+location使用前缀匹配时,无论是root还是alias都能按照我们想的正常工作,
+即对于127.0.0.1/img/ok.html这个链接来说:
+   location /img/ { root /var/;}  //能够拿到/var/img/ok.html这个路径的文件
+   location /img/ {alias /var/;}  //能够拿到/var/ok.html这个路径的文件
+但当,
+location匹配方式为正则时,
+   对于127.0.0.1/imgv/ok.html这个链接来说:
+     location ~ /img.*/ { root /var/;} //能够拿到/var/imgv/ok.html这个路径的文件
+   但,location ~ /img.*/ {alias /var/;} //则不能拿到/var/ok.html这个路径的文件,报403 Forbidden, 而官方给的alias指令的介绍也说了,如果alias用在使用正则匹配的location中,则要在正则中使用组,然后在alias中指定的路径中使用$n引用这个组:
+      location ~ /img.*/(.*)$ {alias /var/$1;}  //可以拿到/var/ok.html这个路径的文件.
+      *.所以当location和alias配合使用时,如果location中用的是正则匹配,则正则中一定要有组,且alias中一定要对组进行引用,因为这个行为目前是已知的,不这样配合用的行为还把握不准
+*****完*****
+
 再说说对php脚本的处理,在nginx.conf中其实对php脚本的处理简单来说只是在相应server中加了一个location: https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/
   1.fastcgi_pass 127.0.0.1:900; //或socket形式
   2.fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; //这句是最关键的,也就是指定脚本文件名,很多时候,默认的$document_root不对,需要手动指定

@@ -66,3 +66,16 @@ location匹配方式为正则时,
   *.nginx中默认就有对php文件的处理,只不过被注释掉了,但写的比较初级,上面给的这个网址上的配置可能要更好一些.
   *.至于php环境的设置参照cnblogs中的配置: https://www.cnblogs.com/lianrenjujishou/p/15179953.html
     *.现在能想到需要注意的就是php中对www.conf文件的应用,因为nginx中127.0.0.1:9000实际上就是php读取该配置文件起作用的.源码编译然后通过使用命令行参数进行运行,会发现一些问题,同时也正是因为这些问题会让你对相应软件有更深的理解
+
+聊一下如何配置https:
+参考链接: http://nginx.org/en/docs/http/configuring_https_servers.html
+http{
+  server {
+    listen 443 ssl;    //上面链接明确说了, 想要使用ssl加密, listen指令后的ssl关键字不可少
+    root /usr/share/nginx/html/;
+    index index.html;
+    server_name www.52fighting.com;
+    ssl_certificate /etc/letsencrypt/live/www.52fighting.com/fullchain.pem;    //letsencrypt生成的fullchain.pem里包含公钥证书和一些中间证书
+    ssl_certificate_key /etc/letsencrypt/live/www.52fighting.com/privkey.pem;
+  }
+}
